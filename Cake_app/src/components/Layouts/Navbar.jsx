@@ -3,103 +3,273 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartItems] = useState(3); // Example cart items count
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="bg-red-800 text-white py-2">
-        <div className="container mx-auto px-6 flex justify-between items-center">
-          <div className="flex space-x-6 text-lg">
-            <Link to="/about" className="hover:text-yellow-300 font-medium">About</Link>
-            <Link to="/contact" className="hover:text-yellow-300 font-medium">Contact</Link>
+      {/* TOP NAVBAR */}
+      <div className="w-full border-b border-gray-200 bg-black text-white">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center py-2 text-sm">
+          
+          {/* Left: About & Contact */}
+          <div className="flex space-x-6">
+            <Link to="/about" className="hover:text-red-600 transition duration-300">About Us</Link>
+            <Link to="/contact" className="hover:text-red-600 transition duration-300">Contact Us</Link>
           </div>
-          <div className="flex space-x-4 text-2xl">
-            <a href="https://www.instagram.com/nandinicake_cookies" className="hover:text-yellow-300">
+          
+          {/* Right: Social + Food Logos */}
+          <div className="flex space-x-4 text-lg items-center">
+            <a href="https://www.instagram.com/nandinicake_cookies" className="hover:text-red-600 transition duration-300">
               <i className="fab fa-instagram"></i>
             </a>
-            <a href="https://m.facebook.com/114489843677281/" className="hover:text-yellow-300">
+            <a href="https://m.facebook.com/114489843677281/" className="hover:text-red-600 transition duration-300">
               <i className="fab fa-facebook-f"></i>
+            </a>
+
+            {/* Food Delivery Logos */}
+            <a href="https://www.swiggy.com/city/amravati/nandini-cake-shop-sai-nagar-rest461393" className="hover:opacity-80 transition duration-300">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <span className="text-black font-bold text-xs">S</span>
+              </div>
+            </a>
+
+            <a href="https://www.justdial.com/Amravati/Nandinis-Cake-Delivery-Service-Near-Shiv-Mandir-Nawathe/9999PX721-X721-191104134806-N7M8_BZDET" className="hover:opacity-80 transition duration-300">
+              <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-black font-bold text-xs">JD</span>
+              </div>
+            </a>
+
+            <a href="https://www.zomato.com/amravati/nandini-cake-shop-sai-nagar/order" className="hover:opacity-80 transition duration-300">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-xs">Z</span>
+              </div>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between py-4">
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-red-700 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">NC</span>
+      {/* MAIN NAVBAR */}
+      <nav className="w-full bg-white text-gray-800 shadow-sm relative">
+        <div className="max-w-7xl mx-auto px-6 flex justify-center items-center py-4 relative">
+          
+          {/* Left (Search Icon) - Desktop */}
+          <div className="absolute left-6 hidden lg:flex items-center space-x-6">
+            {/* Search Icon */}
+            <button 
+              className="text-xl text-gray-700 hover:text-red-600 transition duration-300 relative group"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <i className="fa-solid fa-magnifying-glass"></i>
+              <span className="tooltip">Search</span>
+            </button>
+
+            {/* Search Bar - appears when search is open */}
+            {searchOpen && (
+              <div className="absolute left-0 top-12 bg-white shadow-lg rounded-lg p-2 min-w-64 z-10">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search cakes, pastries..."
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    autoFocus
+                  />
+                  <button className="absolute right-3 top-2 text-gray-500 hover:text-red-600">
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                  </button>
+                </div>
               </div>
-              <span className="text-2xl font-bold text-red-700">Nandini Cakes</span>
-            </div>
+            )}
+          </div>
 
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-red-700 font-medium">Home</Link>
-              <Link to="/birthday" className="text-gray-700 hover:text-red-700 font-medium">Birthday</Link>
-              <Link to="/occasions" className="text-gray-700 hover:text-red-700 font-medium">Occasions</Link>
-              <Link to="/best-sellers" className="text-gray-700 hover:text-red-700 font-medium">Best Sellers</Link>
-              <Link to="/bakery" className="text-gray-700 hover:text-red-700 font-medium">Bakery</Link>
-              <Link to="/chocolates" className="text-gray-700 hover:text-red-700 font-medium">Chocolates</Link>
-            </div>
+          {/* Center (Menu + Logo) - Desktop */}
+          <ul className="hidden lg:flex justify-center items-center space-x-8 text-md font-medium">
+            <li><Link to="/" className="hover:text-red-600 transition duration-300">Home</Link></li>
+            <li><Link to="/birthday" className="hover:text-red-600 transition duration-300">Birthday</Link></li>
+            <li><Link to="/occasions" className="hover:text-red-600 transition duration-300">Occasions</Link></li>
+            <li className="text-3xl font-bold text-amber-700 px-4">Nandini's Cakes</li>
+            <li><Link to="/best-sellers" className="hover:text-red-600 transition duration-300">Best Sellers</Link></li>
+            <li><Link to="/bakery" className="hover:text-red-600 transition duration-300">Bakery</Link></li>
+            <li><Link to="/chocolates" className="hover:text-red-600 transition duration-300">Chocolate</Link></li>
+          </ul>
 
-            {/* Right Icons */}
-            <div className="hidden lg:flex items-center space-x-6">
-              <Link to="/login" className="text-gray-700 hover:text-red-700">
-                <i className="fas fa-user text-xl"></i>
-              </Link>
-              <button className="text-gray-700 hover:text-red-700 relative">
-                <i className="fas fa-shopping-cart text-xl"></i>
-                <span className="absolute -top-2 -right-2 bg-red-700 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">0</span>
-              </button>
-            </div>
+          {/* Mobile Logo - Center */}
+          <div className="lg:hidden text-2xl font-bold text-amber-700">
+            Nandini's Cakes
+          </div>
+
+          {/* Right (Login + Cart) - Desktop */}
+          <div className="absolute right-6 hidden lg:flex items-center space-x-6 text-xl">
+            {/* Login/User Icon */}
+            <Link 
+              to="/login" 
+              className="text-gray-700 hover:text-red-600 transition duration-300 relative group"
+            >
+              <i className="fa-regular fa-user"></i>
+              <span className="tooltip">Account</span>
+            </Link>
+
+            {/* Cart Icon */}
+            <Link 
+              to="/cart" 
+              className="text-gray-700 hover:text-red-600 transition duration-300 relative group"
+            >
+              <i className="fa-solid fa-bag-shopping"></i>
+              {cartItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                  {cartItems}
+                </span>
+              )}
+              <span className="tooltip">Cart ({cartItems})</span>
+            </Link>
+          </div>
+
+          {/* Mobile Icons */}
+          <div className="lg:hidden absolute right-6 flex items-center space-x-4">
+            {/* Mobile Search Icon */}
+            <button 
+              className="text-gray-700 hover:text-red-600 transition duration-300"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <i className="fa-solid fa-magnifying-glass text-lg"></i>
+            </button>
+
+            {/* Mobile Cart Icon */}
+            <Link 
+              to="/cart" 
+              className="text-gray-700 hover:text-red-600 transition duration-300 relative"
+            >
+              <i className="fa-solid fa-bag-shopping text-lg"></i>
+              {cartItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                  {cartItems}
+                </span>
+              )}
+            </Link>
 
             {/* Mobile Menu Button */}
             <button 
-              className="lg:hidden text-gray-700 text-2xl"
+              className="text-gray-700 hover:text-red-600 transition duration-300"
               onClick={() => setMobileMenuOpen(true)}
             >
-              <i className="fas fa-bars"></i>
+              <i className="fas fa-bars text-lg"></i>
             </button>
           </div>
         </div>
+
+        {/* Mobile Search Bar - appears below navbar */}
+        {searchOpen && (
+          <div className="lg:hidden bg-white border-t border-gray-200 py-3 px-6">
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="Search cakes, pastries, cookies..."
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                autoFocus
+              />
+              <button 
+                className="absolute right-4 top-3 text-gray-500 hover:text-red-600"
+                onClick={() => setSearchOpen(false)}
+              >
+                <i className="fa-solid fa-magnifying-glass"></i>
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Mobile Menu */}
       <div className={`fixed top-0 left-0 w-full h-full bg-white z-50 transform transition-transform duration-300 lg:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="p-6">
+        <div className="p-6 h-full flex flex-col">
+          {/* Header */}
           <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">NC</span>
-              </div>
-              <span className="text-xl font-bold text-red-700">Nandini Cakes</span>
+            <div className="text-2xl font-bold text-amber-700">
+              Nandini's Cakes
             </div>
             <button 
-              className="text-3xl text-gray-700"
+              className="text-3xl text-gray-700 hover:text-red-600 transition duration-300"
               onClick={() => setMobileMenuOpen(false)}
             >
               &times;
             </button>
           </div>
-          <nav className="space-y-4">
-            <Link to="/" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link to="/birthday" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Birthday</Link>
-            <Link to="/occasions" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Occasions</Link>
-            <Link to="/best-sellers" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Best Sellers</Link>
-            <Link to="/bakery" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Bakery</Link>
-            <Link to="/chocolates" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Chocolates</Link>
-            <Link to="/about" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
-            <Link to="/contact" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-            <Link to="/login" className="block py-2 text-lg text-gray-700 hover:text-red-700" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+          
+          {/* Mobile Search Bar in Menu */}
+          <div className="mb-6">
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="Search products..."
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button className="absolute right-3 top-3 text-gray-500 hover:text-red-600">
+                <i className="fa-solid fa-magnifying-glass"></i>
+              </button>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex-1 space-y-0 overflow-y-auto">
+            <Link to="/" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-house mr-3 w-6 text-center"></i>
+              Home
+            </Link>
+            <Link to="/birthday" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-cake-candles mr-3 w-6 text-center"></i>
+              Birthday
+            </Link>
+            <Link to="/occasions" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-champagne-glasses mr-3 w-6 text-center"></i>
+              Occasions
+            </Link>
+            <Link to="/best-sellers" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-star mr-3 w-6 text-center"></i>
+              Best Sellers
+            </Link>
+            <Link to="/bakery" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-bread-slice mr-3 w-6 text-center"></i>
+              Bakery
+            </Link>
+            <Link to="/chocolates" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-cookie mr-3 w-6 text-center"></i>
+              Chocolate
+            </Link>
+            <Link to="/about" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-circle-info mr-3 w-6 text-center"></i>
+              About Us
+            </Link>
+            <Link to="/contact" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-phone mr-3 w-6 text-center"></i>
+              Contact Us
+            </Link>
           </nav>
+
+          {/* Mobile Auth Links */}
+          <div className="pt-6 border-t border-gray-200">
+            <Link to="/login" className="flex items-center py-3 text-lg text-gray-700 hover:text-red-600 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-regular fa-user mr-3 w-6 text-center"></i>
+              Login / Register
+            </Link>
+            <Link to="/cart" className="flex items-center py-3 text-lg text-gray-700 hover:text-red-600 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
+              <i className="fa-solid fa-bag-shopping mr-3 w-6 text-center"></i>
+              Cart ({cartItems} items)
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Overlay when mobile menu or search is open */}
+      {(mobileMenuOpen || searchOpen) && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => {
+            setMobileMenuOpen(false);
+            setSearchOpen(false);
+          }}
+        ></div>
+      )}
     </>
   );
 };
