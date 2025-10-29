@@ -216,7 +216,7 @@ const Home = () => {
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
         <div className="   h-full w-full flex items-center justify-center">
-          <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-50 max-w-2xl">
+          <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
             <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
             <p className="text-white text-2xl mb-10">
               <span className="font-bold text-3xl">
