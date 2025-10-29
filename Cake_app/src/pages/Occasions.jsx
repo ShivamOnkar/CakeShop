@@ -7,7 +7,7 @@ const Occasions = () => {
     {
       id: 1,
       name: 'Anniversary Cake',
-      image: '/images/anniversary.jpg',
+      image: '/images/happyanniversary.png',
       description: 'Elegant cakes for your special milestones',
       price: 899
     },
@@ -28,21 +28,21 @@ const Occasions = () => {
     {
       id: 4,
       name: 'Graduation Cake',
-      image: '/images/graduation.jpg',
+      image: '/images/graduation.png',
       description: 'Celebrate academic achievements',
       price: 699
     },
     {
       id: 5,
       name: 'Festival Special',
-      image: '/images/festival.jpg',
+      image: '/images/festival-cake.png',
       description: 'Special cakes for festivals',
       price: 599
     },
     {
       id: 6,
       name: 'Corporate Cake',
-      image: '/images/corporate.jpg',
+      image: '/images/corporate-cake.png',
       description: 'Professional cakes for corporate events',
       price: 1299
     }
