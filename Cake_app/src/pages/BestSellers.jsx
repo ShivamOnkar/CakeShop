@@ -9,56 +9,56 @@ const BestSellers = () => {
       name: "Chocolate Truffle Cake",
       description: "Rich chocolate cake with creamy truffle",
       price: 599,
-      image: "/images/product1.jpg"
+      image: "/images/chocotruffle.webp"
     },
     {
       id: 2,
       name: "Red Velvet Cake",
       description: "Classic red velvet with cream cheese",
       price: 699,
-      image: "/images/product2.jpg"
+      image: "/images/redvelvet.jpg"
     },
     {
       id: 3,
       name: "French Croissant",
       description: "Buttery and flaky croissants",
       price: 120,
-      image: "/images/product3.jpg"
+      image: "/images/French-Croissant1.jpeg"
     },
     {
       id: 4,
       name: "Chocolate Donuts",
       description: "Soft donuts with chocolate glaze",
       price: 180,
-      image: "/images/product4.jpg"
+      image: "/images/choco-donuts.jpg"
     },
     {
       id: 5,
       name: "Black Forest Cake",
       description: "Classic black forest with cherries",
       price: 799,
-      image: "/images/product5.jpg"
+      image: "/images/black-forest.jpeg"
     },
     {
       id: 6,
       name: "Pineapple Cake",
       description: "Fresh pineapple with cream",
       price: 649,
-      image: "/images/product6.jpg"
+      image: "/images/Pineapple-Cake.jpg"
     },
     {
       id: 7,
       name: "Cheese Garlic Bread",
       description: "Garlic bread with cheese topping",
       price: 199,
-      image: "/images/product7.jpg"
+      image: "/images/cheese-garlic-bread.jpg"
     },
     {
       id: 8,
       name: "Chocolate Muffins",
       description: "Soft chocolate muffins",
       price: 240,
-      image: "/images/product8.jpg"
+      image: "/images/choco-muffins.jpg"
     }
   ];
 

@@ -29,7 +29,7 @@ const Birthday = () => {
     {
       id: 4,
       name: 'Princess Theme Cake',
-      image: '/images/princess theme cake.webp',
+      image: '/images/princess-cake.webp',
       description: 'Perfect for princess-themed birthdays',
       price: 1299
     },

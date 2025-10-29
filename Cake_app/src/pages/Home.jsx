@@ -94,7 +94,7 @@ const Home = () => {
         className="hero-section min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/wallpaper.webp')` }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute inset-0 bg-opacity-40"></div>
         <div className="relative z-20 text-center text-white px-4">
           <h1 className="text-gray-300 text-4xl font-bold mb-4">
             Delicious 
@@ -212,11 +212,11 @@ const Home = () => {
 
       {/* Retail Store Section */}
       <section 
-        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-center bg-fixed"
+        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-opacity-60 bg-black bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
-        <div className="bg-black bg-opacity-40 h-full w-full flex items-center justify-center">
-          <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
+        <div className="   h-full w-full flex items-center justify-center">
+          <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-50 max-w-2xl">
             <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
             <p className="text-white text-2xl mb-10">
               <span className="font-bold text-3xl">
