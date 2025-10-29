@@ -31,11 +31,11 @@ const Login = () => {
         
         {/* Left Side */}
         <div className="w-full md:w-1/2 bg-pink-100 p-8 md:p-10 flex flex-col justify-between">
-          <div className="flex justify-center">
+           <div className="flex justify-center">
             <img 
-              src="https://cdn.pixabay.com/photo/2018/05/01/13/04/cake-3364301_1280.png" 
-              alt="Cake Illustration" 
-              className="w-48 md:w-64 animate-float"
+              src="/images/online-shopping.webp" 
+              alt="Online Shopping Illustration" 
+              className="w-58 lg:w-74 animate-float"
             />
           </div>
           <div className="mt-8 space-y-4">

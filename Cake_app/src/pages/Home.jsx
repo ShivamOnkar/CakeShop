@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Home = () => {
-  const [cart, setCart] = useState([]);
+  const { addToCart } = useCart();
 
   const categories = [
     {
@@ -66,35 +67,19 @@ const Home = () => {
     }
   ];
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-    
-    // Show success message
-    alert(`${product.name} added to cart!`);
-    
-    // You can also save to localStorage or context
-    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    alert(`${product.name} added to cart! 🛒`);
   };
 
   return (
     <div>
       {/* Hero Section */}
       <section 
-        className="hero-section min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
+        className="min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/wallpaper.webp')` }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute inset-0  bg-opacity-40"></div>
         <div className="relative z-20 text-center text-white px-4">
           <h1 className="text-gray-300 text-4xl font-bold mb-4">
             Delicious 
@@ -122,7 +107,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Rest of the Home component remains the same */}
       {/* Online Delivery Info */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -197,7 +181,7 @@ const Home = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
                     <button 
-                      onClick={() => addToCart(product)}
+                      onClick={() => handleAddToCart(product)}
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart
@@ -215,7 +199,7 @@ const Home = () => {
         className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
-        <div className="bg-black bg-opacity-40 h-full w-full flex items-center justify-center">
+        <div className=" bg-opacity-40 h-full w-full flex items-center justify-center">
           <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
             <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
             <p className="text-white text-2xl mb-10">

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
 
 const Bakery = () => {
-  const [cart, setCart] = useState([]);
+  const { addToCart } = useCart();
 
   const cookies = [
     {
@@ -65,22 +66,9 @@ const Bakery = () => {
     }
   ];
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-    
-    alert(`${product.name} added to cart!`);
-    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    alert(`${product.name} added to cart! 🛒`);
   };
 
   return (
@@ -111,7 +99,7 @@ const Bakery = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{cookie.price}</span>
                     <button 
-                      onClick={() => addToCart(cookie)}
+                      onClick={() => handleAddToCart(cookie)} {/* Fixed: use cookie instead of product */}
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart
@@ -142,7 +130,7 @@ const Bakery = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{pastry.price}</span>
                     <button 
-                      onClick={() => addToCart(pastry)}
+                      onClick={() => handleAddToCart(pastry)} {/* Fixed: use pastry instead of product */}
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart

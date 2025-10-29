@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [cartItems] = useState(3); // Example cart items count
+  const { getCartItemsCount } = useCart();
+  const cartItemsCount = getCartItemsCount();
 
   return (
     <>
@@ -55,31 +57,12 @@ const Navbar = () => {
           
           {/* Left (Search Icon) - Desktop */}
           <div className="absolute left-6 hidden lg:flex items-center space-x-6">
-            {/* Search Icon */}
             <button 
               className="text-xl text-gray-700 hover:text-red-600 transition duration-300 relative group"
               onClick={() => setSearchOpen(!searchOpen)}
             >
               <i className="fa-solid fa-magnifying-glass"></i>
-              <span className="tooltip">Search</span>
             </button>
-
-            {/* Search Bar - appears when search is open */}
-            {searchOpen && (
-              <div className="absolute left-0 top-12 bg-white shadow-lg rounded-lg p-2 min-w-64 z-10">
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Search cakes, pastries..."
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                    autoFocus
-                  />
-                  <button className="absolute right-3 top-2 text-gray-500 hover:text-red-600">
-                    <i className="fa-solid fa-magnifying-glass"></i>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Center (Menu + Logo) - Desktop */}
@@ -100,49 +83,38 @@ const Navbar = () => {
 
           {/* Right (Login + Cart) - Desktop */}
           <div className="absolute right-6 hidden lg:flex items-center space-x-6 text-xl">
-            {/* Login/User Icon */}
             <Link 
               to="/login" 
               className="text-gray-700 hover:text-red-600 transition duration-300 relative group"
             >
               <i className="fa-regular fa-user"></i>
-              <span className="tooltip">Account</span>
             </Link>
 
-            {/* Cart Icon */}
+            {/* Cart Icon with count */}
             <Link 
               to="/cart" 
               className="text-gray-700 hover:text-red-600 transition duration-300 relative group"
             >
               <i className="fa-solid fa-bag-shopping"></i>
-              {cartItems > 0 && (
+              {cartItemsCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                  {cartItems}
+                  {cartItemsCount}
                 </span>
               )}
-              <span className="tooltip">Cart ({cartItems})</span>
             </Link>
           </div>
 
           {/* Mobile Icons */}
           <div className="lg:hidden absolute right-6 flex items-center space-x-4">
-            {/* Mobile Search Icon */}
-            <button 
-              className="text-gray-700 hover:text-red-600 transition duration-300"
-              onClick={() => setSearchOpen(!searchOpen)}
-            >
-              <i className="fa-solid fa-magnifying-glass text-lg"></i>
-            </button>
-
             {/* Mobile Cart Icon */}
             <Link 
               to="/cart" 
               className="text-gray-700 hover:text-red-600 transition duration-300 relative"
             >
               <i className="fa-solid fa-bag-shopping text-lg"></i>
-              {cartItems > 0 && (
+              {cartItemsCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                  {cartItems}
+                  {cartItemsCount}
                 </span>
               )}
             </Link>
@@ -157,7 +129,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Search Bar - appears below navbar */}
+        {/* Mobile Search Bar */}
         {searchOpen && (
           <div className="lg:hidden bg-white border-t border-gray-200 py-3 px-6">
             <div className="relative">
@@ -196,20 +168,6 @@ const Navbar = () => {
             </button>
           </div>
           
-          {/* Mobile Search Bar in Menu */}
-          <div className="mb-6">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search products..."
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-              <button className="absolute right-3 top-3 text-gray-500 hover:text-red-600">
-                <i className="fa-solid fa-magnifying-glass"></i>
-              </button>
-            </div>
-          </div>
-
           {/* Navigation Links */}
           <nav className="flex-1 space-y-0 overflow-y-auto">
             <Link to="/" className="block py-4 text-lg text-gray-700 hover:text-red-600 border-b border-gray-200 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
@@ -254,7 +212,7 @@ const Navbar = () => {
             </Link>
             <Link to="/cart" className="flex items-center py-3 text-lg text-gray-700 hover:text-red-600 transition duration-300" onClick={() => setMobileMenuOpen(false)}>
               <i className="fa-solid fa-bag-shopping mr-3 w-6 text-center"></i>
-              Cart ({cartItems} items)
+              Cart ({cartItemsCount} items)
             </Link>
           </div>
         </div>

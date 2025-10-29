@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { CartProvider } from './context/CartContext';
 
 import Home from './pages/Home';
 import Birthday from './pages/Birthday';
@@ -15,35 +16,37 @@ import Footer from './components/Layouts/Footer';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import Cart from './pages/Cart'; // Add this import
 
 function App() {
   return (
-    <Router>
-      <div className="App font-sans">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/birthday" element={<Birthday />} />
-            <Route path="/occasions" element={<Occasions />} />
-            <Route path="/best-sellers" element={<BestSellers />} />
-            <Route path="/bakery" element={<Bakery />} />
-            <Route path="/chocolates" element={<Chocolates />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/cart" element={<Cart />} /> 
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <CartProvider>
+      <Router>
+        <div className="App font-sans">
+          <Navbar />
+          <main>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/birthday" element={<Birthday />} />
+              <Route path="/occasions" element={<Occasions />} />
+              <Route path="/best-sellers" element={<BestSellers />} />
+              <Route path="/bakery" element={<Bakery />} />
+              <Route path="/chocolates" element={<Chocolates />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </CartProvider>
   );
 }
 

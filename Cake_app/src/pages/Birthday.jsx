@@ -1,99 +1,105 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
-const Birthday = () => {
-  const [cart, setCart] = useState([]);
+const Bakery = () => {
+  const { addToCart } = useCart();
 
-  const birthdayCakes = [
+  const cookies = [
     {
       id: 1,
-      name: 'Chocolate Birthday Cake',
-      image: '/images/chococake.jpg',
-      description: 'Rich chocolate cake with buttercream frosting',
-      price: 799
+      name: 'Butter Cookie',
+      image: '/images/buttercooki.jpg',
+      description: 'Delicate, buttery, and melt-in-your-mouth soft.',
+      price: 150
     },
     {
       id: 2,
-      name: 'Butterscotch Cake',
-      image: '/images/butterscotchcake.webp',
-      description: 'Delicious butterscotch flavor with cream',
-      price: 599
+      name: 'Choco-chip Cookie',
+      image: '/images/chocochipcooki.webp',
+      description: 'Crispy edges, gooey center – the all-time favorite cookie!',
+      price: 180
     },
     {
       id: 3,
-      name: 'Rainbow Cake',
-      image: '/images/rainbowcake.jpg',
-      description: 'Colorful layers with vanilla frosting',
-      price: 999
+      name: 'Oatmeal Raisin Cookies',
+      image: '/images/oatmealcooki.webp',
+      description: 'Chewy, hearty, and filled with the goodness of oats & raisins.',
+      price: 180
     },
     {
       id: 4,
-      name: 'Princess Theme Cake',
-      image: '/images/princess theme cake.webp',
-      description: 'Perfect for princess-themed birthdays',
-      price: 1299
-    },
-    {
-      id: 5,
-      name: 'Superhero Cake',
-      image: '/images/herocake.jpg',
-      description: 'For the little superhero in your life',
-      price: 1199
-    },
-    {
-      id: 6,
-      name: 'Photo Cake',
-      image: '/images/photocake.jpg',
-      description: 'Custom photo printed on cake',
-      price: 1499
+      name: 'Peanut Butter Cookies',
+      image: '/images/peanutcooki.jpg',
+      description: 'Nutty, rich, and melt-in-your-mouth goodness.',
+      price: 180
     }
   ];
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-    
-    alert(`${product.name} added to cart!`);
-    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  const pastries = [
+    {
+      id: 1,
+      name: 'Chocolate Pastry',
+      image: '/images/chocopastry.jpg',
+      description: 'Rich chocolate pastry',
+      price: 60
+    },
+    {
+      id: 2,
+      name: 'Black Forest Pastry',
+      image: '/images/blackpastry.jpg',
+      description: 'Classic black forest flavor',
+      price: 70
+    },
+    {
+      id: 3,
+      name: 'Strawberry Pastry',
+      image: '/images/strawberrypastry.jpg',
+      description: 'Fresh strawberry pastry',
+      price: 65
+    },
+    {
+      id: 4,
+      name: 'Vanilla Pastry',
+      image: '/images/vanilapastry.jpg',
+      description: 'Classic vanilla flavor',
+      price: 55
+    }
+  ];
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    alert(`${product.name} added to cart! 🛒`);
   };
 
   return (
     <div>
-      {/* Birthday Cakes Header */}
+      {/* Bakery Header */}
       <section className="bg-red-700 text-white py-16">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Birthday Cakes</h1>
-          <p className="text-xl max-w-2xl mx-auto">Make every birthday special with our custom-designed cakes</p>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Bakery Items</h1>
+          <p className="text-xl max-w-2xl mx-auto">Fresh Cupcakes, pastries, and baked goods daily</p>
         </div>
       </section>
 
-      {/* Birthday Cakes */}
-      <section className="py-16 bg-gray-50">
+      {/* Cookies Section */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {birthdayCakes.map(cake => (
-              <div key={cake.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+          <h2 className="text-3xl font-bold text-center mb-12">Fresh Cookies</h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {cookies.map(cookie => (
+              <div key={cookie.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div 
-                  className="h-64 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${cake.image})` }}
+                  className="h-56 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${cookie.image})` }}
                 ></div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2">{cake.name}</h3>
-                  <p className="text-gray-600 mb-4">{cake.description}</p>
+                  <h3 className="text-xl font-bold mb-2">{cookie.name}</h3>
+                  <p className="text-gray-600 mb-4">{cookie.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-red-700">₹{cake.price}</span>
+                    <span className="text-2xl font-bold text-red-700">₹{cookie.price}</span>
                     <button 
-                      onClick={() => addToCart(cake)}
+                      onClick={() => handleAddToCart(cookie)} {/* Fixed: use cookie instead of product */}
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart
@@ -106,34 +112,33 @@ const Birthday = () => {
         </div>
       </section>
 
-      {/* Custom Cake Section */}
-      <section className="py-16 bg-white">
+      {/* Pastries Section */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-4">Custom Birthday Cakes</h2>
-              <p className="text-gray-600 mb-6">
-                We specialize in creating personalized birthday cakes that match your theme and preferences. 
-                Tell us your ideas, and we'll bring them to life!
-              </p>
-              <ul className="space-y-3 text-gray-600 mb-6">
-                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Custom designs and themes</li>
-                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Photo printing available</li>
-                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Various sizes and flavors</li>
-                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Fresh ingredients</li>
-              </ul>
-              <a 
-                href="https://wa.me/7756896725" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="mt-6 inline-block bg-red-700 text-white px-6 py-3 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
-              >
-                Order Custom Cake
-              </a>
-            </div>
-            <div>
-              <img src="/images/customimage.jpg" alt="Custom Cake" className="rounded-lg shadow-lg w-full" />
-            </div>
+          <h2 className="text-3xl font-bold text-center mb-12">Pastries & Desserts</h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {pastries.map(pastry => (
+              <div key={pastry.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                <div 
+                  className="h-56 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${pastry.image})` }}
+                ></div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2">{pastry.name}</h3>
+                  <p className="text-gray-600 mb-4">{pastry.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-red-700">₹{pastry.price}</span>
+                    <button 
+                      onClick={() => handleAddToCart(pastry)} {/* Fixed: use pastry instead of product */}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -141,4 +146,4 @@ const Birthday = () => {
   );
 };
 
-export default Birthday;
+export default Bakery;
