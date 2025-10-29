@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const Birthday = () => {
+  const [cart, setCart] = useState([]);
+
   const birthdayCakes = [
     {
       id: 1,
@@ -47,6 +49,24 @@ const Birthday = () => {
     }
   ];
 
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
+    
+    alert(`${product.name} added to cart!`);
+    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  };
+
   return (
     <div>
       {/* Birthday Cakes Header */}
@@ -62,7 +82,7 @@ const Birthday = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {birthdayCakes.map(cake => (
-              <div key={cake.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={cake.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div 
                   className="h-64 bg-cover bg-center"
                   style={{ backgroundImage: `url(${cake.image})` }}
@@ -72,7 +92,10 @@ const Birthday = () => {
                   <p className="text-gray-600 mb-4">{cake.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{cake.price}</span>
-                    <button className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300">
+                    <button 
+                      onClick={() => addToCart(cake)}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
                       Add to Cart
                     </button>
                   </div>
@@ -94,16 +117,16 @@ const Birthday = () => {
                 Tell us your ideas, and we'll bring them to life!
               </p>
               <ul className="space-y-3 text-gray-600 mb-6">
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Custom designs and themes</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Photo printing available</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Various sizes and flavors</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Fresh ingredients</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Custom designs and themes</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Photo printing available</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Various sizes and flavors</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Fresh ingredients</li>
               </ul>
               <a 
                 href="https://wa.me/7756896725" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="mt-6 inline-block bg-red-700 text-white px-6 py-3 rounded-full hover:bg-red-800 transition duration-300"
+                className="mt-6 inline-block bg-red-700 text-white px-6 py-3 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
               >
                 Order Custom Cake
               </a>

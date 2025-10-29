@@ -12,11 +12,11 @@ import Contact from './pages/Contact';
 import ProductDetails from './pages/ProductDetails';
 import Navbar from './components/Layouts/Navbar';
 import Footer from './components/Layouts/Footer';
-
-// Simple components for auth pages (create these files later)
-const Login = () => <div className="min-h-screen bg-gray-50 py-8"><div className="container mx-auto px-4"><h1>Login</h1></div></div>;
-const Signup = () => <div className="min-h-screen bg-gray-50 py-8"><div className="container mx-auto px-4"><h1>Signup</h1></div></div>;
-const ForgotPassword = () => <div className="min-h-screen bg-gray-50 py-8"><div className="container mx-auto px-4"><h1>Forgot Password</h1></div></div>;
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import Checkout from './pages/Checkout';
+import Cart from './pages/Cart'; // Add this import
 
 function App() {
   return (
@@ -34,9 +34,11 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/cart" element={<Cart />} /> 
           </Routes>
         </main>
         <Footer />

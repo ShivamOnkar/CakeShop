@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Chocolates = () => {
+  const [cart, setCart] = useState([]);
+
   const chocolates = [
     {
       id: 1,
@@ -60,6 +62,24 @@ const Chocolates = () => {
     }
   ];
 
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
+    
+    alert(`${product.name} added to cart!`);
+    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  };
+
   return (
     <div>
       {/* Chocolates Header */}
@@ -75,7 +95,7 @@ const Chocolates = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {chocolates.map(chocolate => (
-              <div key={chocolate.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={chocolate.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div 
                   className="h-56 bg-cover bg-center"
                   style={{ backgroundImage: `url(${chocolate.image})` }}
@@ -85,7 +105,10 @@ const Chocolates = () => {
                   <p className="text-gray-600 mb-4">{chocolate.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{chocolate.price}</span>
-                    <button className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300">
+                    <button 
+                      onClick={() => addToCart(chocolate)}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
                       Add to Cart
                     </button>
                   </div>
@@ -112,12 +135,12 @@ const Chocolates = () => {
                 or just to show someone you care. Each box is carefully curated with our finest chocolates.
               </p>
               <ul className="space-y-3 text-gray-600 mb-6">
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Customizable gift boxes</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Free delivery in Amravati</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Personal message option</li>
-                <li className="flex items-center"><i className="fas fa-check text-red-700 mr-2"></i> Premium packaging</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Customizable gift boxes</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Free delivery in Amravati</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Personal message option</li>
+                <li className="flex items-center"><span className="text-red-700 mr-2">✓</span> Premium packaging</li>
               </ul>
-              <button className="bg-red-700 text-white px-6 py-3 rounded-full hover:bg-red-800 transition duration-300">
+              <button className="bg-red-700 text-white px-6 py-3 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform">
                 Create Custom Gift Box
               </button>
             </div>

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Bakery = () => {
+  const [cart, setCart] = useState([]);
+
   const cookies = [
     {
       id: 1,
@@ -63,6 +65,24 @@ const Bakery = () => {
     }
   ];
 
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
+    
+    alert(`${product.name} added to cart!`);
+    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  };
+
   return (
     <div>
       {/* Bakery Header */}
@@ -80,7 +100,7 @@ const Bakery = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {cookies.map(cookie => (
-              <div key={cookie.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={cookie.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div 
                   className="h-56 bg-cover bg-center"
                   style={{ backgroundImage: `url(${cookie.image})` }}
@@ -90,7 +110,10 @@ const Bakery = () => {
                   <p className="text-gray-600 mb-4">{cookie.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{cookie.price}</span>
-                    <button className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300">
+                    <button 
+                      onClick={() => addToCart(cookie)}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
                       Add to Cart
                     </button>
                   </div>
@@ -108,7 +131,7 @@ const Bakery = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {pastries.map(pastry => (
-              <div key={pastry.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={pastry.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                 <div 
                   className="h-56 bg-cover bg-center"
                   style={{ backgroundImage: `url(${pastry.image})` }}
@@ -118,7 +141,10 @@ const Bakery = () => {
                   <p className="text-gray-600 mb-4">{pastry.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{pastry.price}</span>
-                    <button className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300">
+                    <button 
+                      onClick={() => addToCart(pastry)}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
                       Add to Cart
                     </button>
                   </div>

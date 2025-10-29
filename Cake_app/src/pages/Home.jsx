@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
+  const [cart, setCart] = useState([]);
+
   const categories = [
     {
       id: 1,
@@ -64,11 +66,35 @@ const Home = () => {
     }
   ];
 
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
+    
+    // Show success message
+    alert(`${product.name} added to cart!`);
+    
+    // You can also save to localStorage or context
+    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  };
+
   return (
     <div>
-      {/* Hero Section - Using CSS classes */}
-      <section className="hero-section min-h-screen flex items-center justify-center relative">
-        {/* Content */}
+      {/* Hero Section */}
+      <section 
+        className="hero-section min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: `url('/images/wallpaper.webp')` }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="relative z-20 text-center text-white px-4">
           <h1 className="text-gray-300 text-4xl font-bold mb-4">
             Delicious 
@@ -79,10 +105,10 @@ const Home = () => {
           <h1 className="text-6xl text-white mb-10 font-extrabold">
             NANDINI'S CAKES
           </h1>
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
             <Link 
               to="/contact" 
-              className="bg-black text-white px-8 py-3 text-xl sm:text-2xl font-semibold hover:bg-gray-800 hover:text-white transition duration-300 rounded-lg"
+              className="bg-black text-white px-8 py-3 text-xl sm:text-2xl font-semibold hover:bg-gray-800 transition duration-300 rounded-lg"
             >
               Order Online
             </Link>
@@ -96,6 +122,7 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Rest of the Home component remains the same */}
       {/* Online Delivery Info */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -169,7 +196,10 @@ const Home = () => {
                   <p className="text-gray-600 mb-4">{product.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
-                    <button className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300">
+                    <button 
+                      onClick={() => addToCart(product)}
+                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
+                    >
                       Add to Cart
                     </button>
                   </div>
@@ -180,27 +210,30 @@ const Home = () => {
         </div>
       </section>
 
-  {/* Retail Store Section with CSS Class */}
-<section className="retail-store-bg h-screen w-full flex items-center justify-center">
-  <div className="bg-black bg-opacity-40 h-full w-full flex items-center justify-center">
-    <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
-      <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
-      <p className="text-white text-2xl mb-10">
-        <span className="font-bold text-3xl">
-          Nandini's Cakes, New Prabhat Colony, Shankar Nagar Road, Navathe,
-        </span>
-        <br />
-        <span className="block text-xl">Amravati, Maharashtra</span>
-        <br />
-        Mon-Fri, 11:00 AM - 12:00 Midnight
-        <br />
-        Saturday, 11:00 AM - 12:00 Midnight
-        <br />
-        Sunday, 11:00 AM - 12:00 Midnight
-      </p>
-    </div>
-  </div>
-</section>
+      {/* Retail Store Section */}
+      <section 
+        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
+      >
+        <div className="bg-black bg-opacity-40 h-full w-full flex items-center justify-center">
+          <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
+            <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
+            <p className="text-white text-2xl mb-10">
+              <span className="font-bold text-3xl">
+                Nandini's Cakes, New Prabhat Colony, Shankar Nagar Road, Navathe,
+              </span>
+              <br />
+              <span className="block text-xl">Amravati, Maharashtra</span>
+              <br />
+              Mon-Fri, 11:00 AM - 12:00 Midnight
+              <br />
+              Saturday, 11:00 AM - 12:00 Midnight
+              <br />
+              Sunday, 11:00 AM - 12:00 Midnight
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Additional Info Sections */}
       <section className="py-16 bg-white">
@@ -220,17 +253,17 @@ const Home = () => {
           <h2 className="text-4xl font-bold text-center mb-12">Why Choose Nandini Cakes?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <i className="fas fa-award text-4xl mb-4"></i>
+              <div className="text-4xl mb-4">🏆</div>
               <h3 className="text-xl font-bold mb-2">Premium Quality</h3>
               <p>We use only the finest ingredients to ensure the best taste and quality.</p>
             </div>
             <div className="text-center">
-              <i className="fas fa-clock text-4xl mb-4"></i>
+              <div className="text-4xl mb-4">⏰</div>
               <h3 className="text-xl font-bold mb-2">Fresh Daily</h3>
               <p>All our products are baked fresh daily to guarantee freshness.</p>
             </div>
             <div className="text-center">
-              <i className="fas fa-truck text-4xl mb-4"></i>
+              <div className="text-4xl mb-4">🚚</div>
               <h3 className="text-xl font-bold mb-2">Free Delivery</h3>
               <p>Free home delivery in Amravati for orders above ₹500.</p>
             </div>
