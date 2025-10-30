@@ -1,9 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 const Home = () => {
   const { addToCart } = useCart();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products?category=birthday&limit=4');
+        const data = await response.json();
+        setFeaturedProducts(data.products);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to local data if API fails
+        setFeaturedProducts([
+          {
+            id: 1,
+            name: 'Chocolate Truffle Cake',
+            image: '/images/chocotruffle.webp',
+            description: 'Rich chocolate cake with creamy truffle',
+            price: 799
+          },
+          {
+            id: 2,
+            name: 'Red Velvet Cake',
+            image: '/images/redvelvet.jpg',
+            description: 'Classic red velvet with cream cheese',
+            price: 799
+          },
+          {
+            id: 3,
+            name: 'French CupCakes',
+            image: '/images/cupcake.jpg',
+            description: 'Creamy and Fresh Cutes Cupcakes',
+            price: 30
+          },
+          {
+            id: 4,
+            name: 'Glass Cake',
+            image: '/images/glasscake.jpg',
+            description: 'Smooth and creamy glass cake that melts in your mouth.',
+            price: 50
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   const categories = [
     {
@@ -71,6 +120,17 @@ const Home = () => {
     addToCart(product);
     alert(`${product.name} added to cart! 🛒`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-700 mx-auto"></div>
+          <p className="mt-4 text-xl text-gray-600">Loading delicious cakes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -196,7 +256,7 @@ const Home = () => {
 
       {/* Retail Store Section */}
       <section 
-        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-center bg-fixed"
+        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-opacity-60 bg-black bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
         <div className=" bg-opacity-40 h-full w-full flex items-center justify-center">

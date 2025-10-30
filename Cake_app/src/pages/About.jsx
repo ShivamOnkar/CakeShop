@@ -50,10 +50,10 @@ const About = () => {
           <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">About Nandini Cakes</h1>
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div>
-              <img src="/images/about.jpg" alt="About Nandini Cakes" className="rounded-lg shadow-lg w-full" />
+              <img src="/images/about-store.jpeg" alt="About Nandini Cakes" className="rounded-lg shadow-lg w-full" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold mb-4 text-gray-800">Our Story Since 2020</h2>
+              <h2 className="text-3xl font-bold mb-4  text-gray-800">Our Story Since 2020</h2>
               <p className="text-gray-600 mb-4">
                 Nandini Cakes was founded in 2020 with a simple mission: to bring the finest quality 
                 baked goods to the people of Amravati. What started as a small neighborhood bakery has 
