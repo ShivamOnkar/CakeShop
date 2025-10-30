@@ -7,42 +7,42 @@ const Occasions = () => {
     {
       id: 1,
       name: 'Anniversary Cake',
-      image: '/images/happyanniversary.png',
+      image: '/images/rose.png',
       description: 'Elegant cakes for your special milestones',
       price: 899
     },
     {
       id: 2,
       name: 'Wedding Cake',
-      image: '/images/wedding.jpg',
+      image: '/images/wed.png',
       description: 'Grand wedding cakes for your big day',
       price: 1999
     },
     {
       id: 3,
       name: 'Baby Shower Cake',
-      image: '/images/babyshower.jpg',
+      image: '/images/babys.jpeg',
       description: 'Adorable cakes for baby celebrations',
       price: 799
     },
     {
       id: 4,
       name: 'Graduation Cake',
-      image: '/images/graduation.png',
+      image: '/images/enggradu.png',
       description: 'Celebrate academic achievements',
       price: 699
     },
     {
       id: 5,
       name: 'Festival Special',
-      image: '/images/festival-cake.png',
+      image: '/images/fest.png',
       description: 'Special cakes for festivals',
       price: 599
     },
     {
       id: 6,
       name: 'Corporate Cake',
-      image: '/images/corporate-cake.png',
+      image: '/images/clickinno-cake.png',
       description: 'Professional cakes for corporate events',
       price: 1299
     }
@@ -78,7 +78,7 @@ const Occasions = () => {
 
       {/* Occasion Cakes */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="container  mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {occasions.map(occasion => (
               <div key={occasion.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
