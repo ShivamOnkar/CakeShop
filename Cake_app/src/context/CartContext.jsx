@@ -37,21 +37,25 @@ export const CartProvider = ({ children }) => {
   // Add item to cart
   const addToCart = (product) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
+      const existingItem = prevCart.find(item => item._id === product._id || item.id === product.id);
       
       if (existingItem) {
         // If item exists, increase quantity
         return prevCart.map(item =>
-          item.id === product.id
+         (item._id === product._id || item.id === product.id)
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
         // If item doesn't exist, add new item
-        return [...prevCart, { 
-          ...product, 
-          quantity: 1,
-          addedAt: new Date().toISOString()
+         return [...prevCart, { 
+        _id: product._id, // Store _id as primary ID
+        id: product.id || product._id, // Fallback to id
+        name: product.name,
+        price: product.price,
+        image: product.images?.[0]?.url || product.image,
+        quantity: 1,
+        addedAt: new Date().toISOString()
         }];
       }
     });

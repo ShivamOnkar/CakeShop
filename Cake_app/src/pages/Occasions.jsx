@@ -89,7 +89,7 @@ const Occasions = () => {
                       ₹{occasion.price}
                     </span>
                     <button
-                      onClick={() => handleAddToCart(occasion)} {/* Fixed: use occasion instead of product */}
+                      onClick={() => handleAddToCart(occasion)} 
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart

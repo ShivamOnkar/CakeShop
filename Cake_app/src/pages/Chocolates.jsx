@@ -101,7 +101,7 @@ const Chocolates = () => {
                       ₹{chocolate.price}
                     </span>
                     <button
-                      onClick={() => handleAddToCart(chocolate)} {/* Fixed: use chocolate instead of product */}
+                      onClick={() => handleAddToCart(chocolate)} 
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart
