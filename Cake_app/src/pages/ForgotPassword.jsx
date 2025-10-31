@@ -4,12 +4,24 @@ import { Link } from 'react-router-dom';
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle forgot password logic here
-    console.log('Password reset requested for:', email);
-    setIsSubmitted(true);
+    setError('');
+    setLoading(true);
+
+    try {
+      // Simulate API call - in real app, call your backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Password reset requested for:', email);
+      setIsSubmitted(true);
+    } catch (err) {
+      setError('Failed to send reset link. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -25,7 +37,7 @@ const ForgotPassword = () => {
           </p>
           <Link 
             to="/login" 
-            className="w-full bg-pink-600 text-white p-3 rounded-lg font-semibold hover:bg-pink-700 transition duration-300 block"
+            className="w-full bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition duration-300 block"
           >
             Back to Login
           </Link>
@@ -42,32 +54,40 @@ const ForgotPassword = () => {
           Enter your email address and we'll send you a link to reset your password.
         </p>
 
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input 
             type="email" 
             placeholder="Email Address" 
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-300" 
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" 
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
           <button 
             type="submit" 
-            className="w-full bg-pink-600 text-white p-3 rounded-lg font-semibold hover:bg-pink-700 transition duration-300"
+            className="w-full bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
           >
-            SEND RESET LINK
+            {loading ? 'SENDING...' : 'SEND RESET LINK'}
           </button>
         </form>
 
         <div className="text-center mt-6">
-          <Link to="/login" className="text-pink-600 hover:underline text-sm">
+          <Link to="/login" className="text-red-600 hover:underline text-sm">
             Back to Login
           </Link>
         </div>
 
         <p className="text-center text-gray-700 mt-6 text-sm">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-pink-600 font-semibold hover:underline">
+          <Link to="/signup" className="text-red-600 font-semibold hover:underline">
             Sign up
           </Link>
         </p>

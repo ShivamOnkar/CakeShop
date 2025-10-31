@@ -1,8 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Home = () => {
-  const [cart, setCart] = useState([]);
+  const { addToCart } = useCart();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products?category=birthday&limit=4');
+        const data = await response.json();
+        setFeaturedProducts(data.products);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // Fallback to local data if API fails
+        setFeaturedProducts([
+          {
+            id: 1,
+            name: 'Chocolate Truffle Cake',
+            image: '/images/chocotruffle.webp',
+            description: 'Rich chocolate cake with creamy truffle',
+            price: 799
+          },
+          {
+            id: 2,
+            name: 'Red Velvet Cake',
+            image: '/images/redvelvet.jpg',
+            description: 'Classic red velvet with cream cheese',
+            price: 799
+          },
+          {
+            id: 3,
+            name: 'French CupCakes',
+            image: '/images/cupcake.jpg',
+            description: 'Creamy and Fresh Cutes Cupcakes',
+            price: 30
+          },
+          {
+            id: 4,
+            name: 'Glass Cake',
+            image: '/images/glasscake.jpg',
+            description: 'Smooth and creamy glass cake that melts in your mouth.',
+            price: 50
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
 
   const categories = [
     {
@@ -66,35 +116,30 @@ const Home = () => {
     }
   ];
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-    
-    // Show success message
-    alert(`${product.name} added to cart!`);
-    
-    // You can also save to localStorage or context
-    localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    alert(`${product.name} added to cart! 🛒`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-700 mx-auto"></div>
+          <p className="mt-4 text-xl text-gray-600">Loading delicious cakes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Hero Section */}
       <section 
-        className="hero-section min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
+        className="min-h-screen flex items-center justify-center relative bg-cover bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/wallpaper.webp')` }}
       >
-        <div className="absolute inset-0 bg-opacity-40"></div>
+        <div className="absolute inset-0  bg-opacity-40"></div>
         <div className="relative z-20 text-center text-white px-4">
           <h1 className="text-gray-300 text-4xl font-bold mb-4">
             Delicious 
@@ -122,7 +167,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Rest of the Home component remains the same */}
       {/* Online Delivery Info */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -197,7 +241,7 @@ const Home = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
                     <button 
-                      onClick={() => addToCart(product)}
+                      onClick={() => handleAddToCart(product)}
                       className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
                     >
                       Add to Cart
@@ -215,7 +259,7 @@ const Home = () => {
         className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-opacity-60 bg-black bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
-        <div className="   h-full w-full flex items-center justify-center">
+        <div className=" bg-opacity-40 h-full w-full flex items-center justify-center">
           <div className="text-white border-2 border-gray-900 p-8 bg-gray-900 bg-opacity-60 max-w-2xl">
             <h2 className="uppercase text-5xl font-bold mb-10 text-white text-center">Our retail store</h2>
             <p className="text-white text-2xl mb-10">
