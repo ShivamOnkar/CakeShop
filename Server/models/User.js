@@ -23,35 +23,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
- addresses: [{
-    name: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      required: true
-    },
-    address: {
-      type: String,
-      required: true
-    },
-    city: {
-      type: String,
-      required: true
-    },
-    state: {
-      type: String,
-      required: true
-    },
-    pincode: {
-      type: String,
-      required: true
-    },
-    isDefault: {
-      type: Boolean,
-      default: false
-    }
+  addresses: [{
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true },
+    isDefault: { type: Boolean, default: false }
   }],
   role: {
     type: String,
@@ -62,18 +41,16 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Encrypt password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    next();
-  }
+// 🔒 Encrypt password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-// Match password
-userSchema.methods.matchPassword = async function(enteredPassword) {
+// 🔐 Compare password
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Check if model exists before compiling
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);

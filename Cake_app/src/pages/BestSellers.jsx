@@ -13,36 +13,67 @@ const BestSellers = () => {
         setLoading(true);
         setError('');
         
-        // Try the specific bestsellers endpoint first
-       const endpoints = [
+        // Try multiple endpoints
+        const endpoints = [
           'http://localhost:5000/api/products/category/bestseller',
           'http://localhost:5000/api/products/bestsellers',
           'http://localhost:5000/api/products'
         ];
         
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch bestsellers');
-        // }
+        let products = [];
         
-        const data = await response.json();
+        for (let endpoint of endpoints) {
+          try {
+            console.log(`Trying endpoint: ${endpoint}`);
+            const response = await fetch(endpoint);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Success from ${endpoint}:`, data);
+              
+              // Handle different response formats
+              if (Array.isArray(data)) {
+                products = data;
+              } else if (data.products && Array.isArray(data.products)) {
+                products = data.products;
+              } else if (data.data && Array.isArray(data.data)) {
+                products = data.data;
+              }
+              
+              // If we got products, filter for bestsellers
+              if (products.length > 0) {
+                // Filter products that are bestsellers or have bestseller category
+                const bestsellerProducts = products.filter(product => 
+                  product.category === 'bestseller' || 
+                  product.isBestSeller === true
+                );
+                
+                // If we found bestsellers, use them
+                if (bestsellerProducts.length > 0) {
+                  setBestSellers(bestsellerProducts);
+                  return; // Exit early if successful
+                }
+                
+                // If no specific bestsellers but we have products, use first 8
+                if (products.length > 0) {
+                  setBestSellers(products.slice(0, 8));
+                  return;
+                }
+              }
+            }
+          } catch (endpointError) {
+            console.log(`Endpoint ${endpoint} failed:`, endpointError);
+            // Continue to next endpoint
+          }
+        }
         
-        // If we get an array directly, use it
-        if (Array.isArray(data)) {
-          setBestSellers(data);
-        } 
-        // If we get an object with products property, use that
-        else if (data.products) {
-          setBestSellers(data.products);
-        }
-        // Fallback to empty array
-        else {
-          setBestSellers([]);
-        }
+        // If all endpoints failed, use fallback data
+        throw new Error('All API endpoints failed');
         
       } catch (error) {
         console.error('Error fetching bestsellers:', error);
-        setError('Failed to load bestsellers');
-        // Fallback to local data if API fails
+        setError('Failed to load bestsellers from server');
+        // Use fallback data
         setBestSellers(getFallbackBestSellers());
       } finally {
         setLoading(false);
@@ -184,17 +215,17 @@ const BestSellers = () => {
     return stars;
   };
 
- const handleAddToCart = (product) => {
-  addToCart({
-    _id: product._id, // Make sure to include _id
-    id: product._id, // Use _id as id as well for compatibility
-    name: product.name,
-    price: product.price,
-    image: product.images?.[0]?.url || product.image,
-    quantity: 1
-  });
-  alert(`${product.name} added to cart! 🛒`);
-};
+  const handleAddToCart = (product) => {
+    addToCart({
+      _id: product._id, // Make sure to include _id
+      id: product._id, // Use _id as id as well for compatibility
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url || product.image,
+      quantity: 1
+    });
+    alert(`${product.name} added to cart! 🛒`);
+  };
 
   const getImageUrl = (product) => {
     if (product.images && product.images.length > 0) {

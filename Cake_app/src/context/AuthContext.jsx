@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          // Verify token with backend
+          // Verify token with backend - CHANGED URL
           const response = await fetch('http://localhost:5000/api/auth/profile', {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     checkLoggedIn();
   }, []);
 
-  // Login function
+  // Login function - CHANGED URL
   const login = async (email, password) => {
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -74,16 +74,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register function
-  const register = async (name, email, password, phone) => {
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, phone }),
-      });
+  // Register function - CHANGED URL
+ const register = async ({ name, email, password, phone }) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password, phone }),
+    });
 
       if (response.ok) {
         const userData = await response.json();
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  // Update user profile
+  // Update user profile - CHANGED URL
   const updateProfile = async (userData) => {
     try {
       const token = localStorage.getItem('token');
@@ -131,12 +131,160 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Address Management Functions
+
+  // Add new address - CHANGED URL
+  const addAddress = async (addressData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/users/addresses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      });
+
+      if (response.ok) {
+        const addresses = await response.json();
+        // Update user with new addresses
+        setUser(prevUser => ({
+          ...prevUser,
+          addresses
+        }));
+        return { success: true, data: addresses };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.message };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Get user addresses - CHANGED URL
+  const getAddresses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/users/addresses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const addresses = await response.json();
+        return { success: true, data: addresses };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.message };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Update address - CHANGED URL
+  const updateAddress = async (addressId, addressData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/users/addresses/${addressId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      });
+
+      if (response.ok) {
+        const addresses = await response.json();
+        // Update user with new addresses
+        setUser(prevUser => ({
+          ...prevUser,
+          addresses
+        }));
+        return { success: true, data: addresses };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.message };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Delete address - CHANGED URL
+  const deleteAddress = async (addressId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/users/addresses/${addressId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const addresses = await response.json();
+        // Update user with new addresses
+        setUser(prevUser => ({
+          ...prevUser,
+          addresses
+        }));
+        return { success: true, data: addresses };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.message };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  // Set default address - CHANGED URL
+  const setDefaultAddress = async (addressId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/users/addresses/${addressId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isDefault: true }),
+      });
+
+      if (response.ok) {
+        const addresses = await response.json();
+        // Update user with new addresses
+        setUser(prevUser => ({
+          ...prevUser,
+          addresses
+        }));
+        return { success: true, data: addresses };
+      } else {
+        const error = await response.json();
+        return { success: false, error: error.message };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
   const value = {
     user,
     login,
     register,
     logout,
     updateProfile,
+    // Address functions
+    addAddress,
+    getAddresses,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress,
     loading,
     isAuthenticated: !!user,
   };
