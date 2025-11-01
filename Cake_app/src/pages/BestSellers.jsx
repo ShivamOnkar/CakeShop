@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from '../context/CartContext';
+import { useNotification } from '../hooks/useNotification';
 
 const BestSellers = () => {
   const { addToCart } = useCart();
+  const { showNotification } = useNotification();
   const [bestSellers, setBestSellers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -83,91 +85,91 @@ const BestSellers = () => {
     fetchBestSellers();
   }, []);
 
-  // Fallback data function
-  const getFallbackBestSellers = () => {
-    return [
-      {
-        _id: "1",
-        name: "Chocolate Truffle Cake",
-        description: "Rich chocolate cake with creamy truffle",
-        price: 599,
-        category: "bestseller",
-        images: [{ url: "/images/chocotruffle.webp", alt: "Chocolate Cake" }],
-        isEggless: true,
-        stock: 10
-      },
-      {
-        _id: "2",
-        name: "Red Velvet Cake",
-        description: "Classic red velvet with cream cheese",
-        price: 699,
-        category: "bestseller",
-        images: [{ url: "/images/redvelvet.jpg", alt: "Red Velvet Cake" }],
-        isEggless: false,
-        stock: 8
-      },
-      {
-        _id: "3",
-        name: "French Croissant",
-        description: "Buttery and flaky croissants",
-        price: 120,
-        category: "bestseller",
-        images: [{ url: "/images/French-Croissant1.jpeg", alt: "Croissant" }],
-        isEggless: false,
-        stock: 20
-      },
-      {
-        _id: "4",
-        name: "Chocolate Donuts",
-        description: "Soft donuts with chocolate glaze",
-        price: 180,
-        category: "bestseller",
-        images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
-        isEggless: true,
-        stock: 15
-      },
-      {
-        _id: "5",
-        name: "Black Forest Cake",
-        description: "Classic black forest with cherries",
-        price: 799,
-        category: "bestseller",
-        images: [{ url: "/images/black-forest.jpeg", alt: "Black Forest Cake" }],
-        isEggless: false,
-        stock: 5
-      },
-      {
-        _id: "6",
-        name: "Pineapple Cake",
-        description: "Fresh pineapple with cream",
-        price: 649,
-        category: "bestseller",
-        images: [{ url: "/images/Pineapple-Cake.jpg", alt: "Pineapple Cake" }],
-        isEggless: true,
-        stock: 7
-      },
-      {
-        _id: "7",
-        name: "Cheese Garlic Bread",
-        description: "Garlic bread with cheese topping",
-        price: 199,
-        category: "bestseller",
-        images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
-        isEggless: false,
-        stock: 12
-      },
-      {
-        _id: "8",
-        name: "Chocolate Muffins",
-        description: "Soft chocolate muffins",
-        price: 240,
-        category: "bestseller",
-        images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
-        isEggless: true,
-        stock: 18
-      }
-    ];
-  };
+  // // Fallback data function
+  // const getFallbackBestSellers = () => {
+  //   return [
+  //     {
+  //       _id: "1",
+  //       name: "Chocolate Truffle Cake",
+  //       description: "Rich chocolate cake with creamy truffle",
+  //       price: 599,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/chocotruffle.webp", alt: "Chocolate Cake" }],
+  //       isEggless: true,
+  //       stock: 10
+  //     },
+  //     {
+  //       _id: "2",
+  //       name: "Red Velvet Cake",
+  //       description: "Classic red velvet with cream cheese",
+  //       price: 699,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/redvelvet.jpg", alt: "Red Velvet Cake" }],
+  //       isEggless: false,
+  //       stock: 8
+  //     },
+  //     {
+  //       _id: "3",
+  //       name: "French Croissant",
+  //       description: "Buttery and flaky croissants",
+  //       price: 120,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/French-Croissant1.jpeg", alt: "Croissant" }],
+  //       isEggless: false,
+  //       stock: 20
+  //     },
+  //     {
+  //       _id: "4",
+  //       name: "Chocolate Donuts",
+  //       description: "Soft donuts with chocolate glaze",
+  //       price: 180,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
+  //       isEggless: true,
+  //       stock: 15
+  //     },
+  //     {
+  //       _id: "5",
+  //       name: "Black Forest Cake",
+  //       description: "Classic black forest with cherries",
+  //       price: 799,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/black-forest.jpeg", alt: "Black Forest Cake" }],
+  //       isEggless: false,
+  //       stock: 5
+  //     },
+  //     {
+  //       _id: "6",
+  //       name: "Pineapple Cake",
+  //       description: "Fresh pineapple with cream",
+  //       price: 649,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/Pineapple-Cake.jpg", alt: "Pineapple Cake" }],
+  //       isEggless: true,
+  //       stock: 7
+  //     },
+  //     {
+  //       _id: "7",
+  //       name: "Cheese Garlic Bread",
+  //       description: "Garlic bread with cheese topping",
+  //       price: 199,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
+  //       isEggless: false,
+  //       stock: 12
+  //     },
+  //     {
+  //       _id: "8",
+  //       name: "Chocolate Muffins",
+  //       description: "Soft chocolate muffins",
+  //       price: 240,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
+  //       isEggless: true,
+  //       stock: 18
+  //     }
+  //   ];
+  // };
 
   // Add reviews array
   const reviews = [
@@ -224,7 +226,7 @@ const BestSellers = () => {
       image: product.images?.[0]?.url || product.image,
       quantity: 1
     });
-    alert(`${product.name} added to cart! 🛒`);
+    showNotification(`${product.name} added to cart! 🛒`, 'success');
   };
 
   const getImageUrl = (product) => {

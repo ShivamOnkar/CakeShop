@@ -1,3 +1,4 @@
+// models/Product.js
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -93,5 +94,4 @@ productSchema.index({ category: 1 });
 productSchema.index({ isBestSeller: 1 });
 productSchema.index({ isAvailable: 1 });
 
-// Check if model exists before compiling
 module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

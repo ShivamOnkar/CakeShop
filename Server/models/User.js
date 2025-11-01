@@ -1,55 +1,101 @@
+// models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please add a name'],
-    trim: true
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: 6,
+      select: false // hide password in query results
+    },
+    role: {
+      type: String,
+      enum: ['customer', 'admin'],
+      default: 'customer'
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active'
+    },
+    phone: {
+      type: String,
+      trim: true
+    },
+    addresses: [
+      {
+        type: {
+          type: String,
+          enum: ['home', 'work', 'other'],
+          default: 'home'
+        },
+        street: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: {
+          type: String,
+          default: 'India'
+        }
+      }
+    ],
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order'
+      }
+    ],
+    totalOrders: {
+      type: Number,
+      default: 0
+    },
+    totalSpent: {
+      type: Number,
+      default: 0
+    },
+    lastLogin: {
+      type: Date
+    }
   },
-  email: {
-    type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6
-  },
-  phone: {
-    type: String,
-    trim: true
-  },
-  addresses: [{
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    pincode: { type: String, required: true },
-    isDefault: { type: Boolean, default: false }
-  }],
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
+  {
+    timestamps: true
   }
-}, {
-  timestamps: true
-});
+);
 
-// 🔒 Encrypt password before saving
+// ✅ Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
+
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-// 🔐 Compare password
+// ✅ Compare entered password with stored hash
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// ✅ Optional alternative comparison method (alias)
+userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

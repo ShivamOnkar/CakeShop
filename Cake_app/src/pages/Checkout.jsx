@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useNotification } from '../hooks/useNotification';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+   const { showNotification } = useNotification();
   const { cart, clearCart, getCartTotal, updateQuantity, removeFromCart } = useCart();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addressSidebarOpen, setAddressSidebarOpen] = useState(false);
@@ -25,19 +27,21 @@ const Checkout = () => {
   });
 
   // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!user) {
-      navigate('/login', { 
-        state: { 
-          from: '/checkout',
-          message: 'Please login to proceed with checkout'
-        }
-      });
-    } else {
-      // Fetch user addresses if logged in
-      fetchUserAddresses();
-    }
-  }, [user, navigate]);
+// In your existing Checkout component, update the useEffect:
+useEffect(() => {
+  if (!user) {
+    showNotification('Please login to proceed with checkout', 'warning');
+    navigate('/login', { 
+      state: { 
+        from: '/checkout',
+        message: 'Please login to proceed with checkout'
+      }
+    });
+  } else {
+    // Fetch user addresses if logged in
+    fetchUserAddresses();
+  }
+}, [user, navigate, showNotification]);
 
   // Fetch user addresses from backend
   const fetchUserAddresses = async () => {
@@ -181,6 +185,7 @@ const handlePlaceOrder = async () => {
     // THEN: Check if response was successful
     if (response.ok) {
       console.log('Order created successfully:', responseData);
+       showNotification('Order placed successfully! 🎉', 'success');
       
       // Save order info for success page
       localStorage.setItem('latestOrder', JSON.stringify({

@@ -1,86 +1,89 @@
+// models/Order.js
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+  orderNumber: {
+    type: String,
+    unique: true,
+    required: true
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  orderItems: [{
+  customerName: {
+    type: String,
+    required: true
+  },
+  customerEmail: {
+    type: String,
+    required: true
+  },
+  customerPhone: {
+    type: String,
+    required: true
+  },
+  shippingAddress: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: {
+      type: String,
+      default: 'India'
+    }
+  },
+  products: [{
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
-      required: false
+      required: true
     },
     name: String,
     price: Number,
-    quantity: Number,
-    size: String,
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    },
     image: String
   }],
-  shippingAddress: {
-    name: String,
-    address: String,
-    city: String,
-    state: String,
-    pincode: String,
-    phone: String
+  totalAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],
+    default: 'pending'
   },
   paymentMethod: {
     type: String,
-    required: true,
-    enum: ['cod', 'online']
+    enum: ['cash', 'card', 'upi', 'wallet'],
+    required: true
   },
-  paymentResult: {
-    id: String,
-    status: String,
-    update_time: String,
-    email_address: String
-  },
-  itemsPrice: {
-    type: Number,
-    required: true,
-    default: 0.0
-  },
-  taxPrice: {
-    type: Number,
-    required: true,
-    default: 0.0
-  },
-  shippingPrice: {
-    type: Number,
-    required: true,
-    default: 0.0
-  },
-  totalPrice: {
-    type: Number,
-    required: true,
-    default: 0.0
-  },
-  isPaid: {
-    type: Boolean,
-    required: true,
-    default: false
-  },
-  paidAt: {
-    type: Date
-  },
-  isDelivered: {
-    type: Boolean,
-    required: true,
-    default: false
-  },
-  deliveredAt: {
-    type: Date
-  },
-  orderStatus: {
+  paymentStatus: {
     type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+    enum: ['pending', 'paid', 'failed', 'refunded'],
     default: 'pending'
+  },
+  notes: {
+    type: String
   }
 }, {
   timestamps: true
 });
 
-// Check if model exists before compiling
+// Generate order number before saving
+orderSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    const date = new Date();
+    const timestamp = date.getTime();
+    this.orderNumber = `ORD-${timestamp}`;
+  }
+  next();
+});
+
 module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);
