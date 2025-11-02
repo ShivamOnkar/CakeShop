@@ -71,7 +71,7 @@ app.get("/api/admin/stats", async (req, res) => {
 });
 
 // Database connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/cakeshop";
+const MONGODB_URI = process.env.MONGODB_URI ;
 
 mongoose.connect(MONGODB_URI)
   .then(() => {
@@ -83,7 +83,7 @@ mongoose.connect(MONGODB_URI)
   });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🖼️ Images served at: http://localhost:${PORT}/uploads/<image-name>`);
