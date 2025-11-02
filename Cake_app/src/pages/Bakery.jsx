@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useNotification } from '../hooks/useNotification';
 
 const Bakery = () => {
   const { addToCart } = useCart();
+  const { showNotification } = useNotification();
   const [bakeryItems, setBakeryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,51 +38,51 @@ const Bakery = () => {
     fetchBakeryItems();
   }, []);
 
-  // Fallback data in case API fails
-  const getFallbackBakeryItems = () => {
-    return [
-      {
-        _id: "1",
-        name: "French Croissant",
-        description: "Buttery and flaky French croissants",
-        price: 120,
-        category: "bakery",
-        images: [{ url: "/images/French-Croissant1.jpeg", alt: "French Croissant" }],
-        isEggless: false,
-        stock: 25
-      },
-      {
-        _id: "2",
-        name: "Chocolate Donuts",
-        description: "Soft donuts with rich chocolate glaze",
-        price: 180,
-        category: "bakery",
-        images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
-        isEggless: true,
-        stock: 20
-      },
-      {
-        _id: "3",
-        name: "Cheese Garlic Bread",
-        description: "Garlic bread with melted cheese topping",
-        price: 199,
-        category: "bakery",
-        images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
-        isEggless: false,
-        stock: 18
-      },
-      {
-        _id: "4",
-        name: "Chocolate Muffins",
-        description: "Soft and moist chocolate muffins",
-        price: 240,
-        category: "bakery",
-        images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
-        isEggless: true,
-        stock: 30
-      }
-    ];
-  };
+  // // Fallback data in case API fails
+  // const getFallbackBakeryItems = () => {
+  //   return [
+  //     {
+  //       _id: "1",
+  //       name: "French Croissant",
+  //       description: "Buttery and flaky French croissants",
+  //       price: 120,
+  //       category: "bakery",
+  //       images: [{ url: "/images/French-Croissant1.jpeg", alt: "French Croissant" }],
+  //       isEggless: false,
+  //       stock: 25
+  //     },
+  //     {
+  //       _id: "2",
+  //       name: "Chocolate Donuts",
+  //       description: "Soft donuts with rich chocolate glaze",
+  //       price: 180,
+  //       category: "bakery",
+  //       images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
+  //       isEggless: true,
+  //       stock: 20
+  //     },
+  //     {
+  //       _id: "3",
+  //       name: "Cheese Garlic Bread",
+  //       description: "Garlic bread with melted cheese topping",
+  //       price: 199,
+  //       category: "bakery",
+  //       images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
+  //       isEggless: false,
+  //       stock: 18
+  //     },
+  //     {
+  //       _id: "4",
+  //       name: "Chocolate Muffins",
+  //       description: "Soft and moist chocolate muffins",
+  //       price: 240,
+  //       category: "bakery",
+  //       images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
+  //       isEggless: true,
+  //       stock: 30
+  //     }
+  //   ];
+  // };
 
   const handleAddToCart = (product) => {
     addToCart({
@@ -91,7 +93,7 @@ const Bakery = () => {
       image: product.images?.[0]?.url || product.image,
       quantity: 1
     });
-    alert(`${product.name} added to cart! 🛒`);
+    showNotification(`${product.name} added to cart! 🛒`, 'success');
   };
 
   const getImageUrl = (product) => {

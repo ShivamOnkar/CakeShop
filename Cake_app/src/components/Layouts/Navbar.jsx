@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate import
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -10,6 +10,20 @@ const Navbar = () => {
   const { getCartItemsCount } = useCart();
   const { user, logout, isAuthenticated } = useAuth();
   const cartItemsCount = getCartItemsCount();
+  const navigate = useNavigate(); // Now properly defined
+
+  const handleCartClick = () => {
+    if (!user) {
+      navigate('/login', {
+        state: {
+          from: '/cart',
+          message: 'Please login to view your cart'
+        }
+      });
+      return;
+    }
+    navigate('/cart');
+  };
 
   const handleLogout = () => {
     logout();
@@ -145,9 +159,9 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Cart Icon with count */}
-            <Link 
-              to="/cart" 
+            {/* Cart Icon with count - Updated to use handleCartClick */}
+            <button 
+              onClick={handleCartClick}
               className="text-gray-700 hover:text-red-600 transition duration-300 relative p-2 rounded-lg hover:bg-gray-50 group"
             >
               <i className="fa-solid fa-bag-shopping text-lg"></i>
@@ -156,14 +170,14 @@ const Navbar = () => {
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
 
           {/* Mobile Icons */}
           <div className="lg:hidden flex items-center space-x-3">
-            {/* Mobile Cart Icon */}
-            <Link 
-              to="/cart" 
+            {/* Mobile Cart Icon - Updated to use handleCartClick */}
+            <button 
+              onClick={handleCartClick}
               className="text-gray-700 hover:text-red-600 transition duration-300 relative p-2"
             >
               <i className="fa-solid fa-bag-shopping text-lg"></i>
@@ -172,7 +186,7 @@ const Navbar = () => {
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* Mobile Menu Button */}
             <button 
@@ -302,14 +316,13 @@ const Navbar = () => {
                 </button>
               </>
             )}
-            <Link 
-              to="/cart" 
-              className="flex items-center py-3 text-base sm:text-lg text-gray-700 hover:text-red-600 transition duration-300"
-              onClick={() => setMobileMenuOpen(false)}
+            <button 
+              onClick={handleCartClick}
+              className="flex items-center py-3 text-base sm:text-lg text-gray-700 hover:text-red-600 transition duration-300 w-full text-left"
             >
               <i className="fa-solid fa-bag-shopping mr-3 w-6 text-center"></i>
               Cart ({cartItemsCount} {cartItemsCount === 1 ? 'item' : 'items'})
-            </Link>
+            </button>
           </div>
         </div>
       </div>

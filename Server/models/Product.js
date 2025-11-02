@@ -8,7 +8,8 @@ const productSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Product description is required']
+    required: [true, 'Product description is required'],
+    trim: true
   },
   price: {
     type: Number,
@@ -24,10 +25,16 @@ const productSchema = new mongoose.Schema({
     required: [true, 'Product category is required'],
     enum: ['bestseller', 'bakery', 'birthday', 'chocolate', 'occasion']
   },
-  images: [{
-    url: String,
-    alt: String
-  }],
+
+  // Updated image handling for multer
+  images: [
+    {
+      url: { type: String },
+      alt: { type: String, default: 'Product image' }
+    }
+  ],
+
+  // Basic product flags
   isEggless: {
     type: Boolean,
     default: false
@@ -36,9 +43,10 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+
   stock: {
     type: Number,
-    required: true,
+    required: [true, 'Product stock is required'],
     default: 0,
     min: [0, 'Stock cannot be negative']
   },
@@ -46,6 +54,8 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+
+  // Optional fields
   tags: [String],
   weight: {
     value: Number,
@@ -63,6 +73,7 @@ const productSchema = new mongoose.Schema({
     carbs: Number,
     fat: Number
   },
+
   rating: {
     average: {
       type: Number,
@@ -75,6 +86,8 @@ const productSchema = new mongoose.Schema({
       default: 0
     }
   },
+
+  // Flags for front display
   isBestSeller: {
     type: Boolean,
     default: false
@@ -87,11 +100,10 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better search performance
+// Indexes for performance
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1 });
 productSchema.index({ isBestSeller: 1 });
 productSchema.index({ isAvailable: 1 });
 
-// Check if model exists before compiling
 module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

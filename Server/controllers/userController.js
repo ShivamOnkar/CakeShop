@@ -1,177 +1,260 @@
+// Server/controllers/userController.js
 const User = require('../models/User');
 
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
-const updateUserProfile = async (req, res) => {
+// -----------------------------------------------------
+// @desc    Get all users (with filters & pagination)
+// @route   GET /api/users
+// @access  Private/Admin
+// -----------------------------------------------------
+const getUsers = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const { page = 1, limit = 10, search, role, status } = req.query;
+    const query = {};
 
-    if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-      user.phone = req.body.phone || user.phone;
-
-      if (req.body.password) {
-        user.password = req.body.password;
-      }
-
-      const updatedUser = await user.save();
-
-      res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        role: updatedUser.role,
-        addresses: updatedUser.addresses,
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
+    // 🔍 Search filter (name/email)
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
     }
+
+    // 🧍 Role filter
+    if (role && role !== 'all') query.role = role;
+
+    // ⚙️ Status filter
+    if (status && status !== 'all') query.status = status;
+
+    // 🧮 Fetch users
+ const users = await User.find(query)
+  .select('-password')
+  .populate('orders', '_id totalAmount')
+  .limit(limit * 1)
+  .skip((page - 1) * limit)
+  .sort({ createdAt: -1 });
+
+const usersWithCounts = users.map(u => ({
+  ...u.toObject(),
+  totalOrders: u.orders?.length || 0,
+  totalSpent: u.orders?.reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 0,
+}));
+
+
+    const total = await User.countDocuments(query);
+
+    res.json({
+  success: true,
+  count: usersWithCounts.length,
+  total,
+  users: usersWithCounts,
+});
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(400).json({ message: error.message });
+    console.error('❌ Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching users',
+    });
   }
 };
 
-// @desc    Add or update user address
-// @route   POST /api/users/addresses
-// @access  Private
-const addAddress = async (req, res) => {
+// -----------------------------------------------------
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private/Admin
+// -----------------------------------------------------
+const getUserById = async (req, res) => {
   try {
-    const { name, phone, address, city, state, pincode, isDefault = false } = req.body;
-
-    // Validate required fields
-    if (!name || !phone || !address || !city || !state || !pincode) {
-      return res.status(400).json({ message: 'All address fields are required' });
-    }
-
-    const user = await User.findById(req.user._id);
-    
+    const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
     }
 
-    const newAddress = {
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('❌ Error fetching user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user',
+    });
+  }
+};
+
+// -----------------------------------------------------
+// @desc    Update user details (not password)
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+// -----------------------------------------------------
+const updateUser = async (req, res) => {
+  try {
+    const { password, ...updateData } = req.body;
+
+    // ❌ Prevent password change here
+    if (password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Use change password route to update password',
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user,
+    });
+  } catch (error) {
+    console.error('❌ Error updating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating user',
+    });
+  }
+};
+
+// -----------------------------------------------------
+// @desc    Delete a user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+// -----------------------------------------------------
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    console.error('❌ Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting user',
+    });
+  }
+};
+
+// -----------------------------------------------------
+// @desc    Get user statistics summary
+// @route   GET /api/users/stats/summary
+// @access  Private/Admin
+// -----------------------------------------------------
+const getUserStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ status: 'active' });
+    const adminUsers = await User.countDocuments({ role: 'admin' });
+    const customerUsers = await User.countDocuments({ role: 'customer' });
+
+    // 🆕 New users in last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const newUsers = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        activeUsers,
+        adminUsers,
+        customerUsers,
+        newUsers,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error fetching user stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user statistics',
+    });
+  }
+};
+
+
+// @desc    Create a new user
+// @route   POST /api/users
+// @access  Private/Admin
+const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, status, phone } = req.body;
+
+    // 🔎 Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, Email, and Password are required',
+      });
+    }
+
+    // 🔄 Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
+    }
+
+    // 🆕 Create new user
+    const user = await User.create({
       name,
-      phone,
-      address,
-      city,
-      state,
-      pincode,
-      isDefault
-    };
+      email,
+      password, // will be hashed automatically by pre('save')
+      role: role || 'customer',
+      status: status || 'active',
+      phone: phone || '',
+    });
 
-    // If this is set as default, remove default from other addresses
-    if (isDefault) {
-      user.addresses.forEach(addr => {
-        addr.isDefault = false;
-      });
-    }
-
-    // If this is the first address, set it as default
-    if (user.addresses.length === 0) {
-      newAddress.isDefault = true;
-    }
-
-    user.addresses.push(newAddress);
-    await user.save();
-
-    res.json(user.addresses);
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      },
+    });
   } catch (error) {
-    console.error('Add address error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating user',
+    });
   }
 };
 
-// @desc    Get user addresses
-// @route   GET /api/users/addresses
-// @access  Private
-const getAddresses = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json(user.addresses);
-  } catch (error) {
-    console.error('Get addresses error:', error);
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// @desc    Update user address
-// @route   PUT /api/users/addresses/:addressId
-// @access  Private
-const updateUserAddress = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    const address = user.addresses.id(req.params.addressId);
-
-    if (address) {
-      address.name = req.body.name || address.name;
-      address.address = req.body.address || address.address;
-      address.city = req.body.city || address.city;
-      address.state = req.body.state || address.state;
-      address.pincode = req.body.pincode || address.pincode;
-      address.phone = req.body.phone || address.phone;
-
-      // Handle default address change
-      if (req.body.isDefault && !address.isDefault) {
-        user.addresses.forEach(addr => {
-          addr.isDefault = false;
-        });
-        address.isDefault = true;
-      }
-
-      await user.save();
-      res.json(user.addresses);
-    } else {
-      res.status(404).json({ message: 'Address not found' });
-    }
-  } catch (error) {
-    console.error('Update address error:', error);
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// @desc    Delete user address
-// @route   DELETE /api/users/addresses/:addressId
-// @access  Private
-const deleteUserAddress = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    const address = user.addresses.id(req.params.addressId);
-    
-    if (!address) {
-      return res.status(404).json({ message: 'Address not found' });
-    }
-
-    // If deleting default address, set another as default
-    if (address.isDefault && user.addresses.length > 1) {
-      const otherAddress = user.addresses.find(addr => addr._id.toString() !== req.params.addressId);
-      if (otherAddress) {
-        otherAddress.isDefault = true;
-      }
-    }
-
-    user.addresses.pull({ _id: req.params.addressId });
-    await user.save();
-    
-    res.json(user.addresses);
-  } catch (error) {
-    console.error('Delete address error:', error);
-    res.status(400).json({ message: error.message });
-  }
-};
-
+// -----------------------------------------------------
+// Export all functions
+// -----------------------------------------------------
 module.exports = {
-  updateUserProfile,
-  getAddresses,
-  addAddress,
-  updateUserAddress,
-  deleteUserAddress,
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  getUserStats,
 };

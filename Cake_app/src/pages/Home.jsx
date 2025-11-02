@@ -1,57 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useNotification } from '../hooks/useNotification';
 
 const Home = () => {
   const { addToCart } = useCart();
+  const { showNotification } = useNotification();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [bestSellers, setBestSellers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
+    const fetchHomeData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/products?category=birthday&limit=4');
-        const data = await response.json();
-        setFeaturedProducts(data.products);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        // Fallback to local data if API fails
-        setFeaturedProducts([
-          {
-            id: 1,
-            name: 'Chocolate Truffle Cake',
-            image: '/images/chocotruffle.webp',
-            description: 'Rich chocolate cake with creamy truffle',
-            price: 799
-          },
-          {
-            id: 2,
-            name: 'Red Velvet Cake',
-            image: '/images/redvelvet.jpg',
-            description: 'Classic red velvet with cream cheese',
-            price: 799
-          },
-          {
-            id: 3,
-            name: 'French CupCakes',
-            image: '/images/cupcake.jpg',
-            description: 'Creamy and Fresh Cutes Cupcakes',
-            price: 30
-          },
-          {
-            id: 4,
-            name: 'Glass Cake',
-            image: '/images/glasscake.jpg',
-            description: 'Smooth and creamy glass cake that melts in your mouth.',
-            price: 50
-          }
+        setLoading(true);
+        setError('');
+
+        // Fetch featured products (best sellers)
+        const [bestSellersResponse, featuredResponse] = await Promise.all([
+          fetch('http://localhost:5000/api/products/bestsellers?limit=4'),
+          fetch('http://localhost:5000/api/products?isFeatured=true&limit=4')
         ]);
+
+        if (!bestSellersResponse.ok || !featuredResponse.ok) {
+          throw new Error('Failed to fetch products');
+        }
+
+        const bestSellersData = await bestSellersResponse.json();
+        const featuredData = await featuredResponse.json();
+
+        // Handle API response structure
+        if (bestSellersData.success && bestSellersData.products) {
+          setBestSellers(bestSellersData.products);
+        } else if (Array.isArray(bestSellersData)) {
+          setBestSellers(bestSellersData);
+        }
+
+        if (featuredData.success && featuredData.products) {
+          setFeaturedProducts(featuredData.products);
+        } else if (Array.isArray(featuredData)) {
+          setFeaturedProducts(featuredData);
+        } else if (bestSellersData.success && bestSellersData.products) {
+          // If no featured products, use best sellers as featured
+          setFeaturedProducts(bestSellersData.products);
+        }
+
+      } catch (error) {
+        console.error('Error fetching home data:', error);
+        setError('Failed to load products from server');
+        // Use empty arrays instead of fallback data
+        setFeaturedProducts([]);
+        setBestSellers([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeaturedProducts();
+    fetchHomeData();
   }, []);
 
   const categories = [
@@ -85,40 +91,23 @@ const Home = () => {
     }
   ];
 
-  const bestSellers = [
-    {
-      id: 1,
-      name: 'Chocolate Truffle Cake',
-      image: '/images/chocotruffle.webp',
-      description: 'Rich chocolate cake with creamy truffle',
-      price: 799
-    },
-    {
-      id: 2,
-      name: 'Red Velvet Cake',
-      image: '/images/redvelvet.jpg',
-      description: 'Classic red velvet with cream cheese',
-      price: 799
-    },
-    {
-      id: 3,
-      name: 'French CupCakes',
-      image: '/images/cupcake.jpg',
-      description: 'Creamy and Fresh Cutes Cupcakes',
-      price: 30
-    },
-    {
-      id: 4,
-      name: 'Glass Cake',
-      image: '/images/glasscake.jpg',
-      description: 'Smooth and creamy glass cake that melts in your mouth.',
-      price: 50
-    }
-  ];
-
   const handleAddToCart = (product) => {
-    addToCart(product);
-    alert(`${product.name} added to cart! 🛒`);
+    addToCart({
+      _id: product._id || product.id,
+      id: product._id || product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url || product.image,
+      quantity: 1
+    });
+    showNotification(`${product.name} added to cart! 🛒`, 'success');
+  };
+
+  const getImageUrl = (product) => {
+    if (product.images && product.images.length > 0) {
+      return product.images[0].url;
+    }
+    return product.image || '/images/placeholder-cake.jpg';
   };
 
   if (loading) {
@@ -184,6 +173,15 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Error Message */}
+      {error && (
+        <div className="container mx-auto px-4 mt-4">
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
+
       {/* Featured Categories */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -215,48 +213,127 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Best Sellers */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-4 text-gray-800">Best Sellers</h2>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Our most popular items loved by customers
-          </p>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {bestSellers.map(product => (
-              <div key={product.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
-                <div 
-                  className="h-56 bg-cover bg-center relative cursor-pointer"
-                  style={{ backgroundImage: `url(${product.image})` }}
-                  onClick={() => window.open(product.image, '_blank')}
-                >
-                  <span className="absolute top-4 left-4 bg-red-700 text-white px-3 py-1 rounded-full text-sm">
-                    Bestseller
-                  </span>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-gray-800">{product.name}</h3>
-                  <p className="text-gray-600 mb-4">{product.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
-                    <button 
-                      onClick={() => handleAddToCart(product)}
-                      className="add-to-cart bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform"
-                    >
-                      Add to Cart
-                    </button>
+      {/* Featured Products */}
+      {featuredProducts.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-4 text-gray-800">Featured Products</h2>
+            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+              Handpicked selections from our bakery
+            </p>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredProducts.map(product => (
+                <div key={product._id || product.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                  <div className="h-56 bg-gray-200 relative flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={getImageUrl(product)} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/images/placeholder-cake.jpg';
+                      }}
+                    />
+                    {product.isFeatured && (
+                      <span className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                        Featured
+                      </span>
+                    )}
+                    {product.isEggless && (
+                      <span className="absolute top-4 right-4 bg-green-600 text-white px-2 py-1 rounded-full text-xs">
+                        Eggless
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2 text-gray-800">{product.name}</h3>
+                    <p className="text-gray-600 mb-4 text-sm">{product.description}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
+                      <button 
+                        onClick={() => handleAddToCart(product)}
+                        disabled={product.stock === 0}
+                        className={`bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform ${
+                          product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
+                    </div>
+                    {product.stock > 0 && product.stock < 5 && (
+                      <p className="text-orange-600 text-sm mt-2">
+                        Only {product.stock} left!
+                      </p>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Best Sellers */}
+      {bestSellers.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-4 text-gray-800">Best Sellers</h2>
+            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+              Our most popular items loved by customers
+            </p>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {bestSellers.map(product => (
+                <div key={product._id || product.id} className="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                  <div className="h-56 bg-gray-200 relative flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={getImageUrl(product)} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/images/placeholder-cake.jpg';
+                      }}
+                    />
+                    <span className="absolute top-4 left-4 bg-red-700 text-white px-3 py-1 rounded-full text-sm">
+                      Bestseller
+                    </span>
+                    {product.isEggless && (
+                      <span className="absolute top-4 right-4 bg-green-600 text-white px-2 py-1 rounded-full text-xs">
+                        Eggless
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2 text-gray-800">{product.name}</h3>
+                    <p className="text-gray-600 mb-4 text-sm">{product.description}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-red-700">₹{product.price}</span>
+                      <button 
+                        onClick={() => handleAddToCart(product)}
+                        disabled={product.stock === 0}
+                        className={`bg-red-700 text-white px-4 py-2 rounded-full hover:bg-red-800 transition duration-300 active:scale-95 transform ${
+                          product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
+                    </div>
+                    {product.stock > 0 && product.stock < 5 && (
+                      <p className="text-orange-600 text-sm mt-2">
+                        Only {product.stock} left!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Retail Store Section */}
       <section 
-        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-opacity-60 bg-black bg-center bg-fixed"
+        className="retail-store-bg h-screen w-full flex items-center justify-center bg-cover bg-center bg-fixed"
         style={{ backgroundImage: `url('/images/animationcake.jpg')` }}
       >
         <div className=" bg-opacity-40 h-full w-full flex items-center justify-center">

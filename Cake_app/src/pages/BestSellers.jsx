@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from '../context/CartContext';
+import { useNotification } from '../hooks/useNotification';
 
 const BestSellers = () => {
   const { addToCart } = useCart();
+  const { showNotification } = useNotification();
   const [bestSellers, setBestSellers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -13,36 +15,67 @@ const BestSellers = () => {
         setLoading(true);
         setError('');
         
-        // Try the specific bestsellers endpoint first
-       const endpoints = [
+        // Try multiple endpoints
+        const endpoints = [
           'http://localhost:5000/api/products/category/bestseller',
           'http://localhost:5000/api/products/bestsellers',
           'http://localhost:5000/api/products'
         ];
         
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch bestsellers');
-        // }
+        let products = [];
         
-        const data = await response.json();
+        for (let endpoint of endpoints) {
+          try {
+            console.log(`Trying endpoint: ${endpoint}`);
+            const response = await fetch(endpoint);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Success from ${endpoint}:`, data);
+              
+              // Handle different response formats
+              if (Array.isArray(data)) {
+                products = data;
+              } else if (data.products && Array.isArray(data.products)) {
+                products = data.products;
+              } else if (data.data && Array.isArray(data.data)) {
+                products = data.data;
+              }
+              
+              // If we got products, filter for bestsellers
+              if (products.length > 0) {
+                // Filter products that are bestsellers or have bestseller category
+                const bestsellerProducts = products.filter(product => 
+                  product.category === 'bestseller' || 
+                  product.isBestSeller === true
+                );
+                
+                // If we found bestsellers, use them
+                if (bestsellerProducts.length > 0) {
+                  setBestSellers(bestsellerProducts);
+                  return; // Exit early if successful
+                }
+                
+                // If no specific bestsellers but we have products, use first 8
+                if (products.length > 0) {
+                  setBestSellers(products.slice(0, 8));
+                  return;
+                }
+              }
+            }
+          } catch (endpointError) {
+            console.log(`Endpoint ${endpoint} failed:`, endpointError);
+            // Continue to next endpoint
+          }
+        }
         
-        // If we get an array directly, use it
-        if (Array.isArray(data)) {
-          setBestSellers(data);
-        } 
-        // If we get an object with products property, use that
-        else if (data.products) {
-          setBestSellers(data.products);
-        }
-        // Fallback to empty array
-        else {
-          setBestSellers([]);
-        }
+        // If all endpoints failed, use fallback data
+        throw new Error('All API endpoints failed');
         
       } catch (error) {
         console.error('Error fetching bestsellers:', error);
-        setError('Failed to load bestsellers');
-        // Fallback to local data if API fails
+        setError('Failed to load bestsellers from server');
+        // Use fallback data
         setBestSellers(getFallbackBestSellers());
       } finally {
         setLoading(false);
@@ -52,91 +85,91 @@ const BestSellers = () => {
     fetchBestSellers();
   }, []);
 
-  // Fallback data function
-  const getFallbackBestSellers = () => {
-    return [
-      {
-        _id: "1",
-        name: "Chocolate Truffle Cake",
-        description: "Rich chocolate cake with creamy truffle",
-        price: 599,
-        category: "bestseller",
-        images: [{ url: "/images/chocotruffle.webp", alt: "Chocolate Cake" }],
-        isEggless: true,
-        stock: 10
-      },
-      {
-        _id: "2",
-        name: "Red Velvet Cake",
-        description: "Classic red velvet with cream cheese",
-        price: 699,
-        category: "bestseller",
-        images: [{ url: "/images/redvelvet.jpg", alt: "Red Velvet Cake" }],
-        isEggless: false,
-        stock: 8
-      },
-      {
-        _id: "3",
-        name: "French Croissant",
-        description: "Buttery and flaky croissants",
-        price: 120,
-        category: "bestseller",
-        images: [{ url: "/images/French-Croissant1.jpeg", alt: "Croissant" }],
-        isEggless: false,
-        stock: 20
-      },
-      {
-        _id: "4",
-        name: "Chocolate Donuts",
-        description: "Soft donuts with chocolate glaze",
-        price: 180,
-        category: "bestseller",
-        images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
-        isEggless: true,
-        stock: 15
-      },
-      {
-        _id: "5",
-        name: "Black Forest Cake",
-        description: "Classic black forest with cherries",
-        price: 799,
-        category: "bestseller",
-        images: [{ url: "/images/black-forest.jpeg", alt: "Black Forest Cake" }],
-        isEggless: false,
-        stock: 5
-      },
-      {
-        _id: "6",
-        name: "Pineapple Cake",
-        description: "Fresh pineapple with cream",
-        price: 649,
-        category: "bestseller",
-        images: [{ url: "/images/Pineapple-Cake.jpg", alt: "Pineapple Cake" }],
-        isEggless: true,
-        stock: 7
-      },
-      {
-        _id: "7",
-        name: "Cheese Garlic Bread",
-        description: "Garlic bread with cheese topping",
-        price: 199,
-        category: "bestseller",
-        images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
-        isEggless: false,
-        stock: 12
-      },
-      {
-        _id: "8",
-        name: "Chocolate Muffins",
-        description: "Soft chocolate muffins",
-        price: 240,
-        category: "bestseller",
-        images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
-        isEggless: true,
-        stock: 18
-      }
-    ];
-  };
+  // // Fallback data function
+  // const getFallbackBestSellers = () => {
+  //   return [
+  //     {
+  //       _id: "1",
+  //       name: "Chocolate Truffle Cake",
+  //       description: "Rich chocolate cake with creamy truffle",
+  //       price: 599,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/chocotruffle.webp", alt: "Chocolate Cake" }],
+  //       isEggless: true,
+  //       stock: 10
+  //     },
+  //     {
+  //       _id: "2",
+  //       name: "Red Velvet Cake",
+  //       description: "Classic red velvet with cream cheese",
+  //       price: 699,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/redvelvet.jpg", alt: "Red Velvet Cake" }],
+  //       isEggless: false,
+  //       stock: 8
+  //     },
+  //     {
+  //       _id: "3",
+  //       name: "French Croissant",
+  //       description: "Buttery and flaky croissants",
+  //       price: 120,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/French-Croissant1.jpeg", alt: "Croissant" }],
+  //       isEggless: false,
+  //       stock: 20
+  //     },
+  //     {
+  //       _id: "4",
+  //       name: "Chocolate Donuts",
+  //       description: "Soft donuts with chocolate glaze",
+  //       price: 180,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/choco-donuts.jpg", alt: "Chocolate Donuts" }],
+  //       isEggless: true,
+  //       stock: 15
+  //     },
+  //     {
+  //       _id: "5",
+  //       name: "Black Forest Cake",
+  //       description: "Classic black forest with cherries",
+  //       price: 799,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/black-forest.jpeg", alt: "Black Forest Cake" }],
+  //       isEggless: false,
+  //       stock: 5
+  //     },
+  //     {
+  //       _id: "6",
+  //       name: "Pineapple Cake",
+  //       description: "Fresh pineapple with cream",
+  //       price: 649,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/Pineapple-Cake.jpg", alt: "Pineapple Cake" }],
+  //       isEggless: true,
+  //       stock: 7
+  //     },
+  //     {
+  //       _id: "7",
+  //       name: "Cheese Garlic Bread",
+  //       description: "Garlic bread with cheese topping",
+  //       price: 199,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/cheese-garlic-bread.jpg", alt: "Cheese Garlic Bread" }],
+  //       isEggless: false,
+  //       stock: 12
+  //     },
+  //     {
+  //       _id: "8",
+  //       name: "Chocolate Muffins",
+  //       description: "Soft chocolate muffins",
+  //       price: 240,
+  //       category: "bestseller",
+  //       images: [{ url: "/images/choco-muffins.jpg", alt: "Chocolate Muffins" }],
+  //       isEggless: true,
+  //       stock: 18
+  //     }
+  //   ];
+  // };
 
   // Add reviews array
   const reviews = [
@@ -184,17 +217,17 @@ const BestSellers = () => {
     return stars;
   };
 
- const handleAddToCart = (product) => {
-  addToCart({
-    _id: product._id, // Make sure to include _id
-    id: product._id, // Use _id as id as well for compatibility
-    name: product.name,
-    price: product.price,
-    image: product.images?.[0]?.url || product.image,
-    quantity: 1
-  });
-  alert(`${product.name} added to cart! 🛒`);
-};
+  const handleAddToCart = (product) => {
+    addToCart({
+      _id: product._id, // Make sure to include _id
+      id: product._id, // Use _id as id as well for compatibility
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url || product.image,
+      quantity: 1
+    });
+    showNotification(`${product.name} added to cart! 🛒`, 'success');
+  };
 
   const getImageUrl = (product) => {
     if (product.images && product.images.length > 0) {

@@ -1,79 +1,115 @@
+// Server/models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please add a name'],
-    trim: true
-  },
-  email: {
-    type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6
-  },
-  phone: {
-    type: String,
-    trim: true
-  },
- addresses: [{
+// 🧠 Define user schema
+const userSchema = new mongoose.Schema(
+  {
+    // 👤 Basic Info
     name: {
       type: String,
-      required: true
+      required: [true, 'Name is required'],
+      trim: true,
     },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
+      select: false, // Hide password in query results
+    },
+
+    // ⚙️ Role & Status
+    role: {
+      type: String,
+      enum: ['customer', 'admin'],
+      default: 'customer',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active',
+    },
+
+    // ☎️ Optional Contact Info
     phone: {
       type: String,
-      required: true
+      trim: true,
     },
-    address: {
-      type: String,
-      required: true
-    },
-    city: {
-      type: String,
-      required: true
-    },
-    state: {
-      type: String,
-      required: true
-    },
-    pincode: {
-      type: String,
-      required: true
-    },
-    isDefault: {
-      type: Boolean,
-      default: false
-    }
-  }],
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  }
-}, {
-  timestamps: true
-});
 
-// Encrypt password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+    // 🏠 Address List
+    addresses: [
+      {
+        type: {
+          type: String,
+          enum: ['home', 'work', 'other'],
+          default: 'home',
+        },
+        street: { type: String, trim: true },
+        city: { type: String, trim: true },
+        state: { type: String, trim: true },
+        zipCode: { type: String, trim: true },
+        country: {
+          type: String,
+          default: 'India',
+          trim: true,
+        },
+      },
+    ],
+
+    // 🧾 Orders & Activity
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order',
+      },
+    ],
+    totalOrders: {
+      type: Number,
+      default: 0,
+    },
+    totalSpent: {
+      type: Number,
+      default: 0,
+    },
+    lastLogin: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true, // automatically adds createdAt & updatedAt
+  }
+);
+
+// 🔒 Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
+  } catch (error) {
+    next(error);
   }
-  this.password = await bcrypt.hash(this.password, 10);
 });
 
-// Match password
-userSchema.methods.matchPassword = async function(enteredPassword) {
+// 🔑 Compare entered password with stored hash
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Check if model exists before compiling
-module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+// 🧩 Optional alias for password comparison
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// ✅ Export User model
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+module.exports = User;

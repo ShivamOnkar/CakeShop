@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext'; // Add this import
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
+  const { showNotification } = useNotification(); // Add this
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,10 +31,19 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData.loginEmail, formData.loginPassword);
-      navigate(from, { replace: true });
+      const result = await login(formData.loginEmail, formData.loginPassword);
+      
+      if (result.success) {
+        showNotification('Login successful!', 'success');
+        navigate(from, { replace: true });
+      } else {
+        // Show error without redirecting
+        setError(result.error || 'Login failed. Please try again.');
+        showNotification(result.error || 'Login failed', 'error');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
+      showNotification(err.message || 'Login failed', 'error');
     } finally {
       setLoading(false);
     }

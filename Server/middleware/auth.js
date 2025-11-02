@@ -1,38 +1,61 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Protect routes - verify JWT token
 const protect = async (req, res, next) => {
-  let token;
+  try {
+    let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      // Get token from header
+    // Check for token in headers
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
       token = req.headers.authorization.split(' ')[1];
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Get user from token
-      req.user = await User.findById(decoded.id).select('-password');
-
-      next();
-    } catch (error) {
-      console.error(error);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  }
 
-  if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
-  }
-};
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized, no token provided',
+      });
+    }
 
-const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+
+    // Get user from the token
+    req.user = await User.findById(decoded.id);
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
     next();
-  } else {
-    res.status(401).json({ message: 'Not authorized as admin' });
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error in authentication',
+    });
   }
 };
 
-module.exports = { protect, admin };
+// Restrict route to admin users only
+const restrictToAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Admin privileges required.',
+    });
+  }
+  next();
+};
+
+module.exports = {
+  protect,
+  restrictToAdmin,
+};

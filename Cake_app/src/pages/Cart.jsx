@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
   const navigate = useNavigate();
+    const { user } = useAuth();
   const { 
     cart, 
     updateQuantity, 
@@ -16,8 +18,13 @@ const Cart = () => {
   const total = getCartTotal() + deliveryFee;
 
   const handleProceedToCheckout = () => {
-    if (cart.length === 0) {
-      alert('Your cart is empty!');
+    if (!user) {
+      navigate('/login', {
+        state: {
+          from: '/checkout',
+          message: 'Please login to proceed with checkout'
+        }
+      });
       return;
     }
     navigate('/checkout');
@@ -37,7 +44,24 @@ const Cart = () => {
 
   // Calculate total items
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
+ // If user is not logged in and cart is empty
+  if (!user && cart.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🛒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Please Login</h1>
+          <p className="text-gray-600 mb-6">You need to be logged in to add items to cart</p>
+          <Link 
+            to="/login" 
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300"
+          >
+            Login Now
+          </Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
