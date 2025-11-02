@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import ImageKit from "imagekit-javascript";
 import AdminLayout from "../../components/Layouts/AdminLayout";
 
 const Products = () => {
@@ -10,20 +11,23 @@ const Products = () => {
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     price: "",
     category: "",
     stock: "",
-    image: null,
+    imageUrl: "",
+    imageFile: null,
   });
 
+  // ✅ Set base API
   const apiBase =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-  const imageBase = "http://localhost:5000/uploads";
 
+  // ✅ Auth headers (for admin protected routes)
   const authHeaders = () => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -37,17 +41,13 @@ const Products = () => {
         const res = await axios.get(`${apiBase}/products`, {
           headers: { ...authHeaders() },
         });
-        const arr = res.data?.products || res.data || [];
-        const list = Array.isArray(arr)
-          ? arr
-          : Object.values(arr).flat?.() || [];
+        const list = Array.isArray(res.data?.products)
+          ? res.data.products
+          : res.data;
         setProducts(list);
         setFilteredProducts(list);
       } catch (err) {
-        console.error(
-          "Failed to fetch products:",
-          err?.response?.data || err.message
-        );
+        console.error("Failed to fetch products:", err);
       } finally {
         setLoading(false);
       }
@@ -55,44 +55,82 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Filter and Search
+  // ✅ Filter & Search
   useEffect(() => {
     let filtered = products;
-    if (category !== "All") {
+    if (category !== "All")
       filtered = filtered.filter((p) => p.category === category);
-    }
-    if (search) {
+    if (search)
       filtered = filtered.filter((p) =>
         (p.name || "").toLowerCase().includes(search.toLowerCase())
       );
-    }
     setFilteredProducts(filtered);
   }, [category, search, products]);
 
+  // ✅ Upload to ImageKit (fixed)
+  const uploadImageToImageKit = async (file) => {
+    if (!file) return null;
+
+    try {
+      setUploading(true);
+
+      // Initialize ImageKit SDK
+      const imagekit = new ImageKit({
+        publicKey: import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY,
+        urlEndpoint: import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT,
+        authenticationEndpoint: `${apiBase}/imagekit-auth/imagekit-auth`,
+      });
+
+      // Upload file
+      const result = await imagekit.upload({
+        file, // can be File or base64 string
+        fileName: `product_${Date.now()}_${file.name}`,
+      });
+
+      console.log("✅ Image uploaded successfully:", result);
+      return result.url;
+    } catch (error) {
+      console.error("❌ ImageKit upload failed:", error);
+      alert("Image upload failed. Please check your ImageKit settings.");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // ✅ Add Product
   const handleAddProduct = async () => {
-    if (
-      !newProduct.name ||
-      !newProduct.price ||
-      !newProduct.category ||
-      !newProduct.description
-    ) {
+    if (!newProduct.name || !newProduct.price || !newProduct.category) {
       alert("Please fill all required fields!");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", newProduct.name);
-    formData.append("description", newProduct.description);
-    formData.append("price", newProduct.price);
-    formData.append("category", newProduct.category);
-    formData.append("stock", newProduct.stock || 0);
-    if (newProduct.image) formData.append("image", newProduct.image);
-
     try {
-      const res = await axios.post(`${apiBase}/products`, formData, {
+      let imageUrl = newProduct.imageUrl;
+
+      if (newProduct.imageFile) {
+        const uploadedUrl = await uploadImageToImageKit(newProduct.imageFile);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        } else {
+          alert("Image upload failed. Product not saved.");
+          return;
+        }
+      }
+
+     const productData = {
+  name: newProduct.name,
+  description: newProduct.description,
+  price: newProduct.price,
+  category: newProduct.category,
+  stock: newProduct.stock,
+  image: imageUrl, // ✅ make sure key name is 'image'
+};
+
+      const res = await axios.post(`${apiBase}/products`, productData, {
         headers: { ...authHeaders() },
       });
+
       const created = res.data?.product || res.data;
       setProducts([...products, created]);
       setFilteredProducts([...filteredProducts, created]);
@@ -103,12 +141,14 @@ const Products = () => {
         price: "",
         category: "",
         stock: "",
-        image: null,
+        imageUrl: "",
+        imageFile: null,
       });
+
       alert("✅ Product added successfully!");
     } catch (err) {
-      console.error("Failed to add product:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to add product");
+      console.error("Failed to add product:", err);
+      alert("Failed to add product.");
     }
   };
 
@@ -122,19 +162,8 @@ const Products = () => {
       setProducts((prev) => prev.filter((p) => p._id !== id));
       setFilteredProducts((prev) => prev.filter((p) => p._id !== id));
     } catch (err) {
-      console.error(
-        "Failed to delete product:",
-        err?.response?.data || err.message
-      );
-      alert(err?.response?.data?.message || "Failed to delete product");
+      console.error("Failed to delete product:", err);
     }
-  };
-
-  // ✅ Helper for image URL (handles absolute or relative)
-  const getImageUrl = (image) => {
-    if (!image) return null;
-    if (image.startsWith("http")) return image;
-    return `${imageBase}/${image}`;
   };
 
   return (
@@ -197,15 +226,11 @@ const Products = () => {
                   filteredProducts.map((p) => (
                     <tr key={p._id} className="border-t hover:bg-gray-50">
                       <td className="py-2 px-4">
-                        {getImageUrl(p.image) ? (
+                        {p.image ? (
                           <img
-                            src={getImageUrl(p.image)}
+                            src={p.image}
                             alt={p.name}
                             className="w-12 h-12 rounded object-cover"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://via.placeholder.com/100?text=No+Image";
-                            }}
                           />
                         ) : (
                           <span>No Image</span>
@@ -227,10 +252,7 @@ const Products = () => {
                       </td>
                       <td className="py-2 px-4 text-center space-x-2">
                         <button
-                          onClick={() => {
-                            setSelectedProduct(p);
-                            setShowViewModal(true);
-                          }}
+                          onClick={() => setSelectedProduct(p)}
                           className="text-blue-600 hover:underline"
                         >
                           View
@@ -256,42 +278,6 @@ const Products = () => {
           </div>
         )}
 
-        {/* View Product Modal */}
-        {showViewModal && selectedProduct && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-            <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-              <h2 className="text-xl font-semibold mb-4">Product Details</h2>
-              {getImageUrl(selectedProduct.image) && (
-                <img
-                  src={getImageUrl(selectedProduct.image)}
-                  alt={selectedProduct.name}
-                  className="w-full h-40 object-cover rounded mb-3"
-                />
-              )}
-              <p>
-                <strong>Name:</strong> {selectedProduct.name}
-              </p>
-              <p>
-                <strong>Category:</strong> {selectedProduct.category}
-              </p>
-              <p>
-                <strong>Price:</strong> ₹{selectedProduct.price}
-              </p>
-              <p>
-                <strong>Stock:</strong> {selectedProduct.stock}
-              </p>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Add Product Modal */}
         {showAddModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -307,20 +293,15 @@ const Products = () => {
                 }
                 className="border p-2 rounded w-full mb-2"
               />
-
               <textarea
                 placeholder="Description"
                 value={newProduct.description}
                 onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    description: e.target.value,
-                  })
+                  setNewProduct({ ...newProduct, description: e.target.value })
                 }
                 className="border p-2 rounded w-full mb-2"
                 rows="3"
               ></textarea>
-
               <input
                 type="number"
                 placeholder="Price"
@@ -330,7 +311,6 @@ const Products = () => {
                 }
                 className="border p-2 rounded w-full mb-2"
               />
-
               <select
                 value={newProduct.category}
                 onChange={(e) =>
@@ -345,7 +325,6 @@ const Products = () => {
                 <option value="chocolate">Chocolate</option>
                 <option value="occasion">Occasion</option>
               </select>
-
               <input
                 type="number"
                 placeholder="Stock"
@@ -355,38 +334,32 @@ const Products = () => {
                 }
                 className="border p-2 rounded w-full mb-2"
               />
-
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) =>
-                  setNewProduct({ ...newProduct, image: e.target.files[0] })
+                  setNewProduct({ ...newProduct, imageFile: e.target.files[0] })
                 }
                 className="w-full mb-3"
               />
 
+              {uploading && (
+                <p className="text-blue-600 text-sm mb-2">Uploading image...</p>
+              )}
+
               <div className="flex justify-end space-x-3">
                 <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setNewProduct({
-                      name: "",
-                      price: "",
-                      category: "",
-                      stock: "",
-                      description: "",
-                      image: null,
-                    });
-                  }}
+                  onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddProduct}
+                  disabled={uploading}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  Add
+                  {uploading ? "Uploading..." : "Add"}
                 </button>
               </div>
             </div>

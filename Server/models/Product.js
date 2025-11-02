@@ -27,12 +27,7 @@ const productSchema = new mongoose.Schema({
   },
 
   // Updated image handling for multer
-  images: [
-    {
-      url: { type: String },
-      alt: { type: String, default: 'Product image' }
-    }
-  ],
+  image: { type: String, required: true },
 
   // Basic product flags
   isEggless: {

@@ -90,17 +90,13 @@ router.get("/category/bestseller/bestsellers", getBestSellers);
 // -------------------- ADMIN ROUTES -------------------- //
 
 // ✅ Create a new product (with image upload)
-router.post("/", protect, restrictToAdmin, upload.single("image"), async (req, res) => {
+router.post("/", protect, restrictToAdmin, async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
+    const { name, description, price, category, stock, image } = req.body;
 
-    if (!name || !description || !price || !category) {
-      return res
-        .status(400)
-        .json({ message: "All required fields must be provided" });
+    if (!name || !price || !category || !image) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
-
-    const image = req.file ? req.file.filename : null;
 
     const product = new Product({
       name,
@@ -108,14 +104,17 @@ router.post("/", protect, restrictToAdmin, upload.single("image"), async (req, r
       price,
       category,
       stock: stock || 0,
-      image,
+      image: [{ url: image, alt: name }], // ✅ match your schema
     });
 
     const created = await product.save();
-    res.status(201).json({ message: "✅ Product created successfully", product: created });
+    res.status(201).json({
+      message: "✅ Product created successfully",
+      product: created,
+    });
   } catch (error) {
-    console.error("Create product error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Product creation error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

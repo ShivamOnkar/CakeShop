@@ -28,6 +28,8 @@ const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/admin");
+const uploadRoutes = require("./routes/uploadRoutes");
+const imagekitAuthRoutes = require("./routes/imagekitAuth");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -35,6 +37,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/imagekit-auth", imagekitAuthRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Test route
 app.get("/", (req, res) => {
@@ -87,4 +91,11 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🖼️ Images served at: http://localhost:${PORT}/uploads/<image-name>`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} already in use. Try another one.`);
+  } else {
+    console.error('❌ Server error:', err);
+  }
 });
+

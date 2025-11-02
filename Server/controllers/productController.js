@@ -1,6 +1,12 @@
 const Product = require('../models/Product');
-const path = require('path');
-const fs = require('fs');
+const ImageKit = require('imagekit');
+
+// ✅ Initialize ImageKit
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -125,26 +131,22 @@ const createProduct = async (req, res) => {
   try {
     const { name, category, price, description } = req.body;
 
-    // ✅ Validate required fields
     if (!name || !category || !price || !description) {
       return res.status(400).json({
         message: 'Please provide name, category, price, and description',
       });
     }
 
-    // ✅ Handle image (if uploaded)
     let imageUrl = '';
     if (req.file) {
-      const uploadDir = path.join(__dirname, '../uploads');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-      const fileName = `${Date.now()}_${req.file.originalname}`;
-      const filePath = path.join(uploadDir, fileName);
-      fs.writeFileSync(filePath, req.file.buffer);
-      imageUrl = `/uploads/${fileName}`;
+      const uploadResult = await imagekit.upload({
+        file: req.file.buffer, // buffer from multer
+        fileName: `${Date.now()}_${req.file.originalname}`,
+        folder: '/CakeShop_Products'
+      });
+      imageUrl = uploadResult.url;
     }
 
-    // ✅ Create product with image and body data
     const product = new Product({
       name,
       category,
@@ -180,15 +182,13 @@ const updateProduct = async (req, res) => {
     if (price) product.price = price;
     if (description) product.description = description;
 
-    // ✅ Update image if new one uploaded
     if (req.file) {
-      const uploadDir = path.join(__dirname, '../uploads');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-      const fileName = `${Date.now()}_${req.file.originalname}`;
-      const filePath = path.join(uploadDir, fileName);
-      fs.writeFileSync(filePath, req.file.buffer);
-      product.image = `/uploads/${fileName}`;
+      const uploadResult = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${Date.now()}_${req.file.originalname}`,
+        folder: '/CakeShop_Products'
+      });
+      product.image = uploadResult.url;
     }
 
     const updatedProduct = await product.save();
