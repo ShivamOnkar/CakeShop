@@ -12,6 +12,7 @@ const { protect, restrictToAdmin } = require('../middleware/auth');
 
 // All routes are protected and admin only
 router.get('/', protect, restrictToAdmin, getOrders);
+router.get('/', protect, restrictToAdmin, getOrders);
 router.get('/stats/summary', protect, restrictToAdmin, getOrderStats);
 router.get('/:id', protect, restrictToAdmin, getOrderById);
 router.put('/:id', protect, restrictToAdmin, updateOrderStatus);

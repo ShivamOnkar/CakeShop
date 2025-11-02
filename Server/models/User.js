@@ -1,82 +1,93 @@
-// models/User.js
+// Server/models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// 🧠 Define user schema
 const userSchema = new mongoose.Schema(
   {
+    // 👤 Basic Info
     name: {
       type: String,
       required: [true, 'Name is required'],
-      trim: true
+      trim: true,
     },
     email: {
       type: String,
       required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: 6,
-      select: false // hide password in query results
+      minlength: [6, 'Password must be at least 6 characters long'],
+      select: false, // Hide password in query results
     },
+
+    // ⚙️ Role & Status
     role: {
       type: String,
       enum: ['customer', 'admin'],
-      default: 'customer'
+      default: 'customer',
     },
     status: {
       type: String,
       enum: ['active', 'inactive'],
-      default: 'active'
+      default: 'active',
     },
+
+    // ☎️ Optional Contact Info
     phone: {
       type: String,
-      trim: true
+      trim: true,
     },
+
+    // 🏠 Address List
     addresses: [
       {
         type: {
           type: String,
           enum: ['home', 'work', 'other'],
-          default: 'home'
+          default: 'home',
         },
-        street: String,
-        city: String,
-        state: String,
-        zipCode: String,
+        street: { type: String, trim: true },
+        city: { type: String, trim: true },
+        state: { type: String, trim: true },
+        zipCode: { type: String, trim: true },
         country: {
           type: String,
-          default: 'India'
-        }
-      }
+          default: 'India',
+          trim: true,
+        },
+      },
     ],
+
+    // 🧾 Orders & Activity
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Order'
-      }
+        ref: 'Order',
+      },
     ],
     totalOrders: {
       type: Number,
-      default: 0
+      default: 0,
     },
     totalSpent: {
       type: Number,
-      default: 0
+      default: 0,
     },
     lastLogin: {
-      type: Date
-    }
+      type: Date,
+    },
   },
   {
-    timestamps: true
+    timestamps: true, // automatically adds createdAt & updatedAt
   }
 );
 
-// ✅ Hash password before saving
+// 🔒 Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
@@ -89,14 +100,16 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// ✅ Compare entered password with stored hash
+// 🔑 Compare entered password with stored hash
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// ✅ Optional alternative comparison method (alias)
+// 🧩 Optional alias for password comparison
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.models.User || mongoose.model('User', userSchema);
+// ✅ Export User model
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+module.exports = User;

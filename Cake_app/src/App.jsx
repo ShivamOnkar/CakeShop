@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -28,12 +33,12 @@ import Products from "./pages/Admin/Products";
 import Orders from "./pages/Admin/Orders";
 import Users from "./pages/Admin/Users";
 import AdminLogin from "./pages/Admin/AdminLogin";
+// import AdminAddProduct from "./pages/Admin/AdminAddProduct"; // ✅ NEW IMPORT
 
 // Layout wrapper to hide Navbar/Footer on admin routes
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAdminRoute =
-    location.pathname.startsWith("/admin");
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
     <>
@@ -115,6 +120,15 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* ✅ NEW ROUTE FOR ADD PRODUCT
+                  <Route
+                    path="/admin/add-product"
+                    element={
+                      <ProtectedRoute requireAdmin={true}>
+                        <AdminAddProduct />
+                      </ProtectedRoute>
+                    }
+                  /> */}
 
                   {/* 404 Page */}
                   <Route

@@ -1,13 +1,14 @@
-// routes/admin.js
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const User = require('../models/User');  // ✅ make sure this import exists
+const User = require('../models/User');
 
-// ✅ Admin dashboard stats
+// ===============================
+// 🔹 Admin Dashboard Statistics
+// ===============================
 router.get('/dashboard/stats', protect, adminAuth, async (req, res) => {
   try {
     const totalProducts = await Product.countDocuments();
@@ -21,7 +22,6 @@ router.get('/dashboard/stats', protect, adminAuth, async (req, res) => {
 
     const totalRevenue = revenueResult[0]?.total || 0;
 
-    // ✅ Wrap inside `success` and `stats`
     res.json({
       success: true,
       stats: {
@@ -40,7 +40,9 @@ router.get('/dashboard/stats', protect, adminAuth, async (req, res) => {
   }
 });
 
-// Get recent orders
+// ===============================
+// 🔹 Get Recent Orders
+// ===============================
 router.get('/orders', protect, adminAuth, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
@@ -51,11 +53,14 @@ router.get('/orders', protect, adminAuth, async (req, res) => {
 
     res.json({ orders });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Server error while fetching orders' });
   }
 });
 
-// Get top selling products
+// ===============================
+// 🔹 Get Top-Selling Products
+// ===============================
 router.get('/products/top-selling', protect, adminAuth, async (req, res) => {
   try {
     const products = await Product.find()
@@ -64,11 +69,78 @@ router.get('/products/top-selling', protect, adminAuth, async (req, res) => {
 
     res.json({ products });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching top-selling products:', error);
+    res.status(500).json({ message: 'Server error while fetching top-selling products' });
   }
 });
 
-// ✅ Get all registered users
+// ===============================
+// 🔹 Get All Products
+// ===============================
+router.get('/products', protect, adminAuth, async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+    res.json({ products });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ message: 'Failed to fetch products' });
+  }
+});
+
+// ===============================
+// 🔹 Add a New Product
+// ===============================
+router.post('/products', protect, adminAuth, async (req, res) => {
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { name, category, price, description, stock, image, isBestSeller } = body;
+
+    if (!name || !category || !price || !description) {
+      return res.status(400).json({
+        message: 'Product name, category, price, and description are required',
+      });
+    }
+
+    const product = new Product({
+      name: name.trim(),
+      category: category.trim(),
+      price,
+      description: description.trim(),
+      stock: stock || 0,
+      image: image || '',
+      isBestSeller: isBestSeller || false,
+    });
+
+    await product.save();
+    res.status(201).json({ message: '✅ Product added successfully', product });
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({ message: '❌ Failed to add product', error: error.message });
+  }
+});
+
+
+// ===============================
+// 🔹 Delete Product by ID
+// ===============================
+router.delete('/products/:id', protect, adminAuth, async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ message: 'Failed to delete product' });
+  }
+});
+
+// ===============================
+// 🔹 Get All Registered Users
+// ===============================
 router.get('/users', protect, adminAuth, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
