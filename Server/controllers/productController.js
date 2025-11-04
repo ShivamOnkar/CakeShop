@@ -1,5 +1,5 @@
-const Product = require('../models/Product');
-const ImageKit = require('imagekit');
+const Product = require("../models/Product");
+const ImageKit = require("imagekit");
 
 // ✅ Initialize ImageKit
 const imagekit = new ImageKit({
@@ -18,36 +18,30 @@ const getProducts = async (req, res) => {
       search,
       minPrice,
       maxPrice,
-      isEggless,
-      isVegetarian,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      sortBy = "createdAt",
+      sortOrder = "desc",
       page = 1,
-      limit = 12
+      limit = 12,
     } = req.query;
 
-    const filter = { isAvailable: true };
+    const filter = {};
 
-    if (category && category !== 'all') filter.category = category;
-    if (search) filter.$text = { $search: search };
+    if (category && category !== "All") filter.category = category;
+    if (search) filter.name = { $regex: search, $options: "i" };
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    if (isEggless !== undefined) filter.isEggless = isEggless === 'true';
-    if (isVegetarian !== undefined) filter.isVegetarian = isVegetarian === 'true';
 
     const sortOptions = {};
-    sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
+    sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
     const skip = (page - 1) * limit;
 
     const products = await Product.find(filter)
       .sort(sortOptions)
       .skip(skip)
-      .limit(Number(limit))
-      .select('-ingredients -allergens -nutritionalInfo');
+      .limit(Number(limit));
 
     const total = await Product.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
@@ -59,12 +53,12 @@ const getProducts = async (req, res) => {
         totalPages,
         totalProducts: total,
         hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     });
   } catch (error) {
-    console.error('Get products error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get products error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -74,12 +68,14 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (error) {
-    console.error('Get product error:', error);
-    if (error.kind === 'ObjectId') return res.status(404).json({ message: 'Product not found' });
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get product error:", error);
+    if (error.kind === "ObjectId")
+      return res.status(404).json({ message: "Product not found" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -91,17 +87,14 @@ const getProductsByCategory = async (req, res) => {
     const { category } = req.params;
     const { limit = 20 } = req.query;
 
-    const products = await Product.find({
-      category,
-      isAvailable: true
-    })
+    const products = await Product.find({ category })
       .limit(Number(limit))
       .sort({ createdAt: -1 });
 
     res.json(products);
   } catch (error) {
-    console.error('Get products by category error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get products by category error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -110,17 +103,13 @@ const getProductsByCategory = async (req, res) => {
 // @access  Public
 const getBestSellers = async (req, res) => {
   try {
-    const products = await Product.find({
-      isBestSeller: true,
-      isAvailable: true
-    })
-      .sort({ 'rating.average': -1, createdAt: -1 })
+    const products = await Product.find({ isBestSeller: true })
+      .sort({ createdAt: -1 })
       .limit(8);
-
     res.json(products);
   } catch (error) {
-    console.error('Get bestsellers error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Get bestsellers error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -129,42 +118,34 @@ const getBestSellers = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, category, price, description } = req.body;
+    const { name, category, price, description, stock, image } = req.body;
 
-    if (!name || !category || !price || !description) {
-      return res.status(400).json({
-        message: 'Please provide name, category, price, and description',
-      });
+    if (!name || !category || !price) {
+      return res
+        .status(400)
+        .json({ message: "Please provide name, category, and price" });
     }
 
-    let imageUrl = '';
-    if (req.file) {
-      const uploadResult = await imagekit.upload({
-        file: req.file.buffer, // buffer from multer
-        fileName: `${Date.now()}_${req.file.originalname}`,
-        folder: '/CakeShop_Products'
-      });
-      imageUrl = uploadResult.url;
-    }
+    // ✅ If frontend sends only image URL
+    const imageData = image
+      ? [{ url: image, alt: name }]
+      : [{ url: "", alt: "No image" }];
 
-    const product = new Product({
+    const newProduct = new Product({
       name,
       category,
       price,
       description,
-      image: imageUrl,
+      stock: stock || 0,
+      image: imageData,
       isAvailable: true,
     });
 
-    const createdProduct = await product.save();
+    const createdProduct = await newProduct.save();
     res.status(201).json(createdProduct);
   } catch (error) {
-    console.error('Create product error:', error);
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ message: messages.join(', ') });
-    }
-    res.status(500).json({ message: 'Server error' });
+    console.error("Create product error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -174,32 +155,25 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
 
-    const { name, category, price, description } = req.body;
+    const { name, category, price, description, stock, image } = req.body;
+
     if (name) product.name = name;
     if (category) product.category = category;
     if (price) product.price = price;
     if (description) product.description = description;
+    if (stock !== undefined) product.stock = stock;
 
-    if (req.file) {
-      const uploadResult = await imagekit.upload({
-        file: req.file.buffer,
-        fileName: `${Date.now()}_${req.file.originalname}`,
-        folder: '/CakeShop_Products'
-      });
-      product.image = uploadResult.url;
-    }
+    // ✅ Update image if URL provided
+    if (image) product.image = [{ url: image, alt: name || product.name }];
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (error) {
-    console.error('Update product error:', error);
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ message: messages.join(', ') });
-    }
-    res.status(500).json({ message: 'Server error' });
+    console.error("Update product error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -209,13 +183,14 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
 
     await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Product removed' });
+    res.json({ message: "Product removed successfully" });
   } catch (error) {
-    console.error('Delete product error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Delete product error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -226,5 +201,5 @@ module.exports = {
   getBestSellers,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 };

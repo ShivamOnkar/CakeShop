@@ -23,17 +23,17 @@ const Products = () => {
     imageFile: null,
   });
 
-  // ✅ Set base API
+  // ✅ API base
   const apiBase =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-  // ✅ Auth headers (for admin protected routes)
+  // ✅ Auth headers
   const authHeaders = () => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // ✅ Fetch products
+  // ✅ Fetch all products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -55,7 +55,7 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Filter & Search
+  // ✅ Filter + Search
   useEffect(() => {
     let filtered = products;
     if (category !== "All")
@@ -67,38 +67,40 @@ const Products = () => {
     setFilteredProducts(filtered);
   }, [category, search, products]);
 
-  // ✅ Upload to ImageKit (fixed)
+  // ✅ Upload image to ImageKit
   const uploadImageToImageKit = async (file) => {
     if (!file) return null;
-
     try {
       setUploading(true);
+      const authResponse = await axios.get(`${apiBase}/imagekit-auth`);
+      const authData = authResponse.data;
 
-      // Initialize ImageKit SDK
       const imagekit = new ImageKit({
         publicKey: import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY,
         urlEndpoint: import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT,
-        authenticationEndpoint: `${apiBase}/imagekit-auth/imagekit-auth`,
+        authenticationEndpoint: `${apiBase}/imagekit-auth`,
       });
 
-      // Upload file
-      const result = await imagekit.upload({
-        file, // can be File or base64 string
+      const uploadResult = await imagekit.upload({
+        file,
         fileName: `product_${Date.now()}_${file.name}`,
+        token: authData.token,
+        signature: authData.signature,
+        expire: authData.expire,
       });
 
-      console.log("✅ Image uploaded successfully:", result);
-      return result.url;
+      console.log("✅ Image uploaded:", uploadResult);
+      return uploadResult.url;
     } catch (error) {
-      console.error("❌ ImageKit upload failed:", error);
-      alert("Image upload failed. Please check your ImageKit settings.");
+      console.error("❌ Image upload failed:", error);
+      alert("Image upload failed. Please check ImageKit setup.");
       return null;
     } finally {
       setUploading(false);
     }
   };
 
-  // ✅ Add Product
+  // ✅ Add new product
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.category) {
       alert("Please fill all required fields!");
@@ -110,22 +112,21 @@ const Products = () => {
 
       if (newProduct.imageFile) {
         const uploadedUrl = await uploadImageToImageKit(newProduct.imageFile);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        } else {
+        if (uploadedUrl) imageUrl = uploadedUrl;
+        else {
           alert("Image upload failed. Product not saved.");
           return;
         }
       }
 
-     const productData = {
-  name: newProduct.name,
-  description: newProduct.description,
-  price: newProduct.price,
-  category: newProduct.category,
-  stock: newProduct.stock,
-  image: imageUrl, // ✅ make sure key name is 'image'
-};
+      const productData = {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: newProduct.price,
+        category: newProduct.category,
+        stock: newProduct.stock,
+        image: [{ url: imageUrl, alt: newProduct.name }], // ✅ Correct structure
+      };
 
       const res = await axios.post(`${apiBase}/products`, productData, {
         headers: { ...authHeaders() },
@@ -152,7 +153,7 @@ const Products = () => {
     }
   };
 
-  // ✅ Delete Product
+  // ✅ Delete product
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -205,7 +206,7 @@ const Products = () => {
           </select>
         </div>
 
-        {/* Loading */}
+        {/* Table */}
         {loading ? (
           <p className="text-center py-10 text-gray-500">Loading products...</p>
         ) : (
@@ -228,7 +229,13 @@ const Products = () => {
                       <td className="py-2 px-4">
                         {p.image ? (
                           <img
-                            src={p.image}
+                            src={
+                              Array.isArray(p.image)
+                                ? p.image[0]?.url
+                                : typeof p.image === "object"
+                                ? p.image.url
+                                : p.image
+                            }
                             alt={p.name}
                             className="w-12 h-12 rounded object-cover"
                           />
@@ -278,7 +285,7 @@ const Products = () => {
           </div>
         )}
 
-        {/* Add Product Modal */}
+        {/* Add Modal */}
         {showAddModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
             <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
@@ -360,6 +367,51 @@ const Products = () => {
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   {uploading ? "Uploading..." : "Add"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Modal */}
+        {selectedProduct && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+            <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">
+                {selectedProduct.name}
+              </h2>
+
+              <img
+                src={
+                  Array.isArray(selectedProduct.image)
+                    ? selectedProduct.image[0]?.url
+                    : typeof selectedProduct.image === "object"
+                    ? selectedProduct.image.url
+                    : selectedProduct.image
+                }
+                alt={selectedProduct.name}
+                className="w-full h-48 object-cover rounded mb-3"
+              />
+
+              <p className="text-gray-700 mb-2">
+                <strong>Category:</strong> {selectedProduct.category}
+              </p>
+              <p className="text-gray-700 mb-2">
+                <strong>Price:</strong> ₹{selectedProduct.price}
+              </p>
+              <p className="text-gray-700 mb-2">
+                <strong>Stock:</strong> {selectedProduct.stock}
+              </p>
+              <p className="text-gray-600 mb-4">
+                {selectedProduct.description || "No description available."}
+              </p>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setSelectedProduct(null)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Close
                 </button>
               </div>
             </div>
