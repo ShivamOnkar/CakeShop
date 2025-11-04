@@ -1,7 +1,6 @@
-// src/context/CartContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { useNotification } from './NotificationContext';
+import { useNotification } from '../hooks/useNotification';
 
 const CartContext = createContext();
 
@@ -15,7 +14,7 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const { user, isAuthenticated, logout } = useAuth(); // Add logout to destructuring
+  const { user, isAuthenticated } = useAuth();
   const { showNotification } = useNotification();
 
   // Load cart from localStorage on mount
@@ -36,19 +35,20 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (cart.length > 0) {
       localStorage.setItem('cart', JSON.stringify(cart));
+    } else {
+      localStorage.removeItem('cart');
     }
   }, [cart]);
 
   // Clear cart when user logs out
   useEffect(() => {
     if (!isAuthenticated) {
-      // If user is not authenticated, clear the cart
       setCart([]);
       localStorage.removeItem('cart');
     }
   }, [isAuthenticated]);
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = useCallback((product, quantity = 1) => {
     // Check if user is logged in
     if (!user) {
       showNotification('Please login to add items to cart', 'warning');
@@ -71,6 +71,7 @@ export const CartProvider = ({ children }) => {
         // Add new item to cart
         const newItem = {
           id: product.id || product._id,
+          _id: product._id || product.id,
           name: product.name,
           price: product.price,
           image: product.image,
@@ -80,20 +81,26 @@ export const CartProvider = ({ children }) => {
         return [...prevCart, newItem];
       }
     });
-  };
+  }, [user, showNotification]);
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = useCallback((productId) => {
     setCart(prevCart => {
+      const itemToRemove = prevCart.find(item => item.id === productId);
       const updatedCart = prevCart.filter(item => item.id !== productId);
+      
       if (updatedCart.length === 0) {
         localStorage.removeItem('cart');
       }
+      
+      if (itemToRemove) {
+        showNotification(`${itemToRemove.name} removed from cart`, 'info');
+      }
+      
       return updatedCart;
     });
-    showNotification('Item removed from cart', 'info');
-  };
+  }, [showNotification]);
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = useCallback((productId, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
       return;
@@ -104,21 +111,25 @@ export const CartProvider = ({ children }) => {
         item.id === productId ? { ...item, quantity: newQuantity } : item
       )
     );
-  };
+  }, [removeFromCart]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     localStorage.removeItem('cart');
     showNotification('Cart cleared', 'info');
-  };
+  }, [showNotification]);
 
-  const getCartTotal = () => {
+  const getCartTotal = useCallback(() => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
+  }, [cart]);
 
-  const getCartItemsCount = () => {
+  const getCartItemsCount = useCallback(() => {
     return cart.reduce((total, item) => total + item.quantity, 0);
-  };
+  }, [cart]);
+
+  const isInCart = useCallback((productId) => {
+    return cart.some(item => item.id === productId);
+  }, [cart]);
 
   const value = {
     cart,
@@ -127,7 +138,8 @@ export const CartProvider = ({ children }) => {
     updateQuantity,
     clearCart,
     getCartTotal,
-    getCartItemsCount
+    getCartItemsCount,
+    isInCart
   };
 
   return (

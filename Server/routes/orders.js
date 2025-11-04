@@ -6,12 +6,13 @@ const {
   getOrderById,
   updateOrderStatus,
   deleteOrder,
-  getOrderStats
+  getOrderStats,
+  createOrder
 } = require('../controllers/orderController');
 const { protect, restrictToAdmin } = require('../middleware/auth');
 
 // All routes are protected and admin only
-router.get('/', protect, restrictToAdmin, getOrders);
+router.post("/", createOrder);
 router.get('/', protect, restrictToAdmin, getOrders);
 router.get('/stats/summary', protect, restrictToAdmin, getOrderStats);
 router.get('/:id', protect, restrictToAdmin, getOrderById);

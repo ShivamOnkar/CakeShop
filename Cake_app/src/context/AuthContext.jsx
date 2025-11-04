@@ -1,10 +1,17 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
 
 // Create Auth Context
 const AuthContext = createContext();
 
 // API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 // Custom hook to use auth context
 export const useAuth = () => {
@@ -38,236 +45,210 @@ export const AuthProvider = ({ children }) => {
     },
   };
 
-  // ✅ Helper function for API calls (auto includes token)
-  const makeApiCall = async (url, options = {}) => {
+  // ✅ Helper function for API calls
+  const makeApiCall = useCallback(async (url, options = {}) => {
     const token = localStorage.getItem("token");
     const headers = {
       "Content-Type": "application/json",
       ...options.headers,
     };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const response = await fetch(url, { ...options, headers });
-    const data = await response.json();
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
 
     if (!response.ok) {
-      console.error("API Error:", data);
-      throw new Error(data.message || "API request failed");
+      throw new Error(data.message || `API request failed: ${response.status}`);
     }
 
     return data;
-  };
+  }, []);
 
-  // ✅ Check login state when app starts or refreshes
+  // ✅ Auto login check when app starts or refreshes
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (token) {
-          const userData = await makeApiCall(API_ENDPOINTS.AUTH.PROFILE);
-          setUser(userData.user || userData);
-          setIsAuthenticated(true);
-        } else {
+        if (!token) {
+          setUser(null);
           setIsAuthenticated(false);
+          setLoading(false);
+          return;
         }
+
+        const res = await makeApiCall(API_ENDPOINTS.AUTH.PROFILE);
+        const userData = res.user || res;
+
+        // Ensure _id exists
+        if (!userData || !userData._id) {
+          console.warn("⚠️ Invalid user data from /auth/profile:", userData);
+          localStorage.removeItem("token");
+          setUser(null);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        console.log("✅ Logged in user:", userData);
+        setUser(userData);
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error("Auth check failed:", error.message);
         localStorage.removeItem("token");
+        setUser(null);
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
     };
+
     checkAuth();
-  }, []);
+  }, [makeApiCall]);
 
-  // ✅ User login
-  const login = async (email, password) => {
-    try {
-      const userData = await makeApiCall(API_ENDPOINTS.AUTH.LOGIN, {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+  // ✅ Login
+  const login = useCallback(
+    async (email, password) => {
+      try {
+        const res = await makeApiCall(API_ENDPOINTS.AUTH.LOGIN, {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
 
-      const token = userData.token || userData.accessToken;
-      if (token) localStorage.setItem("token", token);
+        const token = res.token || res.accessToken;
+        const userData = res.user || res;
 
-      setUser(userData.user || userData);
-      setIsAuthenticated(true);
-      return { success: true, data: userData };
-    } catch (error) {
-      console.error("Login failed:", error);
-      return { success: false, error: error.message };
-    }
-  };
+        if (token) localStorage.setItem("token", token);
+        if (userData && userData._id) {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
 
-  // ✅ Admin login (checks role)
-  const adminLogin = async (email, password) => {
-    try {
-      const res = await makeApiCall(API_ENDPOINTS.AUTH.LOGIN, {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-
-      const user = res.user || res;
-      const token = res.token || res.accessToken;
-
-      if (!user || !token) {
-        return { success: false, error: "Invalid response from server" };
+        return { success: true, data: userData };
+      } catch (error) {
+        console.error("Login failed:", error.message);
+        return { success: false, error: error.message };
       }
+    },
+    [makeApiCall]
+  );
 
-      if (user.role !== "admin") {
-        return { success: false, error: "Access denied. Admin privileges required." };
+  // ✅ Admin Login
+  const adminLogin = useCallback(
+    async (email, password) => {
+      try {
+        const res = await makeApiCall(API_ENDPOINTS.AUTH.LOGIN, {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        const token = res.token || res.accessToken;
+        const userData = res.user || res;
+
+        if (!userData || userData.role !== "admin") {
+          return {
+            success: false,
+            error: "Access denied. Admin privileges required.",
+          };
+        }
+
+        localStorage.setItem("token", token);
+        setUser(userData);
+        setIsAuthenticated(true);
+        return { success: true, data: userData };
+      } catch (error) {
+        console.error("Admin login failed:", error.message);
+        return { success: false, error: error.message };
       }
+    },
+    [makeApiCall]
+  );
 
-      localStorage.setItem("token", token);
-      setUser(user);
-      setIsAuthenticated(true);
+  // ✅ Register
+  const register = useCallback(
+    async ({ name, email, password, phone }) => {
+      try {
+        const res = await makeApiCall(API_ENDPOINTS.AUTH.REGISTER, {
+          method: "POST",
+          body: JSON.stringify({ name, email, password, phone }),
+        });
 
-      return { success: true, data: user };
-    } catch (error) {
-      console.error("Admin login failed:", error);
-      return { success: false, error: error.message };
-    }
-  };
+        const token = res.token || res.accessToken;
+        const userData = res.user || res;
 
-  // ✅ Register new user
-  const register = async ({ name, email, password, phone }) => {
-    try {
-      const userData = await makeApiCall(API_ENDPOINTS.AUTH.REGISTER, {
-        method: "POST",
-        body: JSON.stringify({ name, email, password, phone }),
-      });
+        if (token) localStorage.setItem("token", token);
+        if (userData && userData._id) {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
 
-      const token = userData.token || userData.accessToken;
-      if (token) localStorage.setItem("token", token);
-
-      setUser(userData.user || userData);
-      setIsAuthenticated(true);
-      return { success: true, data: userData };
-    } catch (error) {
-      console.error("Registration failed:", error);
-      return { success: false, error: error.message };
-    }
-  };
+        return { success: true, data: userData };
+      } catch (error) {
+        console.error("Registration failed:", error.message);
+        return { success: false, error: error.message };
+      }
+    },
+    [makeApiCall]
+  );
 
   // ✅ Logout
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
 
-  // ✅ Check if admin
-  const isAdmin = () => user?.role === "admin";
+  // ✅ Admin checks
+  const isAdmin = useCallback(() => user?.role === "admin", [user]);
 
-  // ✅ Get admin dashboard stats
-  const getDashboardStats = async () => {
+  // ✅ Profile & Addresses
+  const updateProfile = useCallback(
+    async (data) => {
+      try {
+        const updatedUser = await makeApiCall(API_ENDPOINTS.USERS.PROFILE, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+        setUser(updatedUser);
+        return { success: true, data: updatedUser };
+      } catch (error) {
+        console.error("Update profile failed:", error.message);
+        return { success: false, error: error.message };
+      }
+    },
+    [makeApiCall]
+  );
+
+  const getAddresses = useCallback(async () => {
     try {
-      const data = await makeApiCall(API_ENDPOINTS.ADMIN.DASHBOARD_STATS);
-      return { success: true, data };
+      const res = await makeApiCall(API_ENDPOINTS.USERS.ADDRESSES);
+      return { success: true, data: res.addresses || res };
     } catch (error) {
-      console.error("Dashboard stats error:", error);
       return { success: false, error: error.message };
     }
-  };
+  }, [makeApiCall]);
 
-  // ✅ Get admin orders
-  const getAdminOrders = async (params = "") => {
-    try {
-      const data = await makeApiCall(`${API_ENDPOINTS.ADMIN.ORDERS}${params}`);
-      return { success: true, data };
-    } catch (error) {
-      console.error("Fetch admin orders error:", error);
-      return { success: false, error: error.message };
-    }
-  };
+  const addAddress = useCallback(
+    async (address) => {
+      try {
+        const res = await makeApiCall(API_ENDPOINTS.USERS.ADDRESSES, {
+          method: "POST",
+          body: JSON.stringify(address),
+        });
+        setUser((prev) => (prev ? { ...prev, addresses: res.addresses } : null));
+        return { success: true, data: res.addresses };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    },
+    [makeApiCall]
+  );
 
-  // ✅ Update user profile
-  const updateProfile = async (userData) => {
-    try {
-      const updatedUser = await makeApiCall(API_ENDPOINTS.USERS.PROFILE, {
-        method: "PUT",
-        body: JSON.stringify(userData),
-      });
-      setUser(updatedUser);
-      return { success: true, data: updatedUser };
-    } catch (error) {
-      console.error("Update profile error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  // ✅ Address Management
-  const addAddress = async (addressData) => {
-    try {
-      const addresses = await makeApiCall(API_ENDPOINTS.USERS.ADDRESSES, {
-        method: "POST",
-        body: JSON.stringify(addressData),
-      });
-      setUser((prev) => ({ ...prev, addresses }));
-      return { success: true, data: addresses };
-    } catch (error) {
-      console.error("Add address error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  const getAddresses = async () => {
-    try {
-      const addresses = await makeApiCall(API_ENDPOINTS.USERS.ADDRESSES);
-      return { success: true, data: addresses };
-    } catch (error) {
-      console.error("Get addresses error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  const updateAddress = async (addressId, addressData) => {
-    try {
-      const addresses = await makeApiCall(`${API_ENDPOINTS.USERS.ADDRESSES}/${addressId}`, {
-        method: "PUT",
-        body: JSON.stringify(addressData),
-      });
-      setUser((prev) => ({ ...prev, addresses }));
-      return { success: true, data: addresses };
-    } catch (error) {
-      console.error("Update address error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  const deleteAddress = async (addressId) => {
-    try {
-      const addresses = await makeApiCall(`${API_ENDPOINTS.USERS.ADDRESSES}/${addressId}`, {
-        method: "DELETE",
-      });
-      setUser((prev) => ({ ...prev, addresses }));
-      return { success: true, data: addresses };
-    } catch (error) {
-      console.error("Delete address error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  const setDefaultAddress = async (addressId) => {
-    try {
-      const addresses = await makeApiCall(`${API_ENDPOINTS.USERS.ADDRESSES}/${addressId}`, {
-        method: "PUT",
-        body: JSON.stringify({ isDefault: true }),
-      });
-      setUser((prev) => ({ ...prev, addresses }));
-      return { success: true, data: addresses };
-    } catch (error) {
-      console.error("Set default address error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  // ✅ Provide everything in context
+  // ✅ Provide context value
   const value = {
     user,
     loading,
@@ -278,13 +259,10 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     isAdmin,
-    getDashboardStats,
-    getAdminOrders,
-    addAddress,
     getAddresses,
-    updateAddress,
-    deleteAddress,
-    setDefaultAddress,
+    addAddress,
+    makeApiCall,
+    API_ENDPOINTS,
   };
 
   return (

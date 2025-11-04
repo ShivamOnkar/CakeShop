@@ -31,7 +31,7 @@ const Orders = () => {
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch orders");
 
-      const ordersData = data.orders || data || [];
+      const ordersData = data.orders || [];
       setOrders(ordersData);
       setFilteredOrders(ordersData);
     } catch (err) {
@@ -95,7 +95,10 @@ const Orders = () => {
   };
 
   // ✅ Statistics
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+  const totalRevenue = orders.reduce(
+    (sum, o) => sum + (o.totalPrice || o.totalAmount || 0),
+    0
+  );
   const pendingCount = orders.filter((o) => o.status === "pending").length;
   const deliveredCount = orders.filter((o) => o.status === "delivered").length;
 
@@ -157,20 +160,22 @@ const Orders = () => {
                       <td className="py-2 px-4 border-b">{order._id}</td>
                       <td className="py-2 px-4 border-b">
                         <div className="font-semibold">
-                          {order.user?.name || "Guest"}
+                          {order.customerName || order.user?.name || "Guest"}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {order.user?.email || "No Email"}
+                          {order.customerEmail || order.user?.email || "No Email"}
                         </div>
                       </td>
                       <td className="py-2 px-4 border-b">
-                        {order.shippingAddress?.phone || "-"}
+                        {order.customerPhone ||
+                          order.shippingAddress?.phone ||
+                          "-"}
                       </td>
                       <td className="py-2 px-4 border-b">
                         {order.shippingAddress?.city || "-"}
                       </td>
                       <td className="py-2 px-4 border-b text-right">
-                        ₹{order.totalPrice || 0}
+                        ₹{order.totalPrice || order.totalAmount || 0}
                       </td>
                       <td className="py-2 px-4 border-b">
                         <span
@@ -235,23 +240,58 @@ const Orders = () => {
               </h2>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <p><strong>Name:</strong> {selectedOrder.user?.name || "Guest"}</p>
-                <p><strong>Email:</strong> {selectedOrder.user?.email || "N/A"}</p>
-                <p><strong>Phone:</strong> {selectedOrder.shippingAddress?.phone || "-"}</p>
-                <p><strong>City:</strong> {selectedOrder.shippingAddress?.city || "-"}</p>
-                <p><strong>Total:</strong> ₹{selectedOrder.totalPrice}</p>
-                <p><strong>Status:</strong> {selectedOrder.status}</p>
-                <p><strong>Payment:</strong> {selectedOrder.paymentMethod || "N/A"}</p>
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {selectedOrder.customerName ||
+                    selectedOrder.user?.name ||
+                    "Guest"}
+                </p>
+                <p>
+                  <strong>Email:</strong>{" "}
+                  {selectedOrder.customerEmail ||
+                    selectedOrder.user?.email ||
+                    "N/A"}
+                </p>
+                <p>
+                  <strong>Phone:</strong>{" "}
+                  {selectedOrder.customerPhone ||
+                    selectedOrder.shippingAddress?.phone ||
+                    "-"}
+                </p>
+                <p>
+                  <strong>City:</strong>{" "}
+                  {selectedOrder.shippingAddress?.city || "-"}
+                </p>
+                <p>
+                  <strong>Total:</strong> ₹
+                  {selectedOrder.totalPrice || selectedOrder.totalAmount || 0}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedOrder.status}
+                </p>
+                <p>
+                  <strong>Payment:</strong>{" "}
+                  {selectedOrder.paymentMethod || "N/A"}
+                </p>
                 <p className="col-span-2">
                   <strong>Address:</strong>{" "}
-                  {selectedOrder.shippingAddress?.address || "Not provided"}
+                  {[
+                    selectedOrder.shippingAddress?.address,
+                    selectedOrder.shippingAddress?.city,
+                    selectedOrder.shippingAddress?.state,
+                    selectedOrder.shippingAddress?.postalCode,
+                    selectedOrder.shippingAddress?.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "Not provided"}
                 </p>
                 <div className="col-span-2">
                   <strong>Products:</strong>
                   <ul className="list-disc ml-6">
-                    {selectedOrder.orderItems?.map((p, i) => (
+                    {(selectedOrder.products || []).map((p, i) => (
                       <li key={i}>
-                        {p.quantity}× {p.name} — ₹{p.price}
+                        {p.quantity}× {p.product?.name || p.name} — ₹
+                        {p.product?.price || p.price}
                       </li>
                     ))}
                   </ul>
