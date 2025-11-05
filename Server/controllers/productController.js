@@ -68,8 +68,7 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (error) {
     console.error("Get product error:", error);
@@ -116,20 +115,32 @@ const getBestSellers = async (req, res) => {
 // @desc    Create a product
 // @route   POST /api/products
 // @access  Private/Admin
+// @desc Create a product
 const createProduct = async (req, res) => {
   try {
     const { name, category, price, description, stock, image } = req.body;
 
     if (!name || !category || !price) {
-      return res
-        .status(400)
-        .json({ message: "Please provide name, category, and price" });
+      return res.status(400).json({ message: "Please provide name, category, and price" });
     }
 
-    // ✅ If frontend sends only image URL
-    const imageData = image
-      ? [{ url: image, alt: name }]
-      : [{ url: "", alt: "No image" }];
+    // ✅ Ensure image field format is uniform
+    let imageData = [];
+
+    if (typeof image === "string" && image.trim() !== "") {
+      imageData = [{ url: image, alt: name }];
+    } else if (Array.isArray(image) && image.length > 0) {
+      imageData = image;
+    } else if (req.file) {
+      const uploadResponse = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${Date.now()}_${req.file.originalname}`,
+        folder: "products",
+      });
+      imageData = [{ url: uploadResponse.url, alt: name }];
+    } else {
+      imageData = [{ url: "", alt: "No image" }];
+    }
 
     const newProduct = new Product({
       name,
@@ -141,13 +152,19 @@ const createProduct = async (req, res) => {
       isAvailable: true,
     });
 
-    const createdProduct = await newProduct.save();
-    res.status(201).json(createdProduct);
+    const savedProduct = await newProduct.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      product: savedProduct,
+    });
   } catch (error) {
-    console.error("Create product error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Create product error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // @desc    Update a product
 // @route   PUT /api/products/:id
@@ -155,10 +172,9 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-    const { name, category, price, description, stock, image } = req.body;
+    const { name, category, price, description, stock } = req.body;
 
     if (name) product.name = name;
     if (category) product.category = category;
@@ -166,8 +182,16 @@ const updateProduct = async (req, res) => {
     if (description) product.description = description;
     if (stock !== undefined) product.stock = stock;
 
-    // ✅ Update image if URL provided
-    if (image) product.image = [{ url: image, alt: name || product.name }];
+    // ✅ If new image file is uploaded, upload to ImageKit
+    if (req.file) {
+      const uploadResponse = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: `${Date.now()}_${req.file.originalname}`,
+        folder: "products",
+      });
+
+      product.image = [{ url: uploadResponse.url, alt: name || product.name }];
+    }
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -183,8 +207,7 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product removed successfully" });

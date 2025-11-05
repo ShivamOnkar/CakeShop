@@ -19,7 +19,7 @@ const Products = () => {
     price: "",
     category: "",
     stock: "",
-    imageUrl: "",
+    imageUrl: "", // ✅ Will hold the final ImageKit URL
     imageFile: null,
   });
 
@@ -33,7 +33,7 @@ const Products = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // ✅ Fetch all products
+  // ✅ Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -67,7 +67,7 @@ const Products = () => {
     setFilteredProducts(filtered);
   }, [category, search, products]);
 
-  // ✅ Upload image to ImageKit
+  // ✅ Upload to ImageKit and return full CDN URL
   const uploadImageToImageKit = async (file) => {
     if (!file) return null;
     try {
@@ -89,8 +89,8 @@ const Products = () => {
         expire: authData.expire,
       });
 
-      console.log("✅ Image uploaded:", uploadResult);
-      return uploadResult.url;
+      console.log("✅ Image uploaded:", uploadResult.url);
+      return uploadResult.url; // 🔧 Return the CDN URL only
     } catch (error) {
       console.error("❌ Image upload failed:", error);
       alert("Image upload failed. Please check ImageKit setup.");
@@ -100,7 +100,7 @@ const Products = () => {
     }
   };
 
-  // ✅ Add new product
+  // ✅ Add product
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.category) {
       alert("Please fill all required fields!");
@@ -110,6 +110,7 @@ const Products = () => {
     try {
       let imageUrl = newProduct.imageUrl;
 
+      // 🔧 Upload to ImageKit if a file is selected
       if (newProduct.imageFile) {
         const uploadedUrl = await uploadImageToImageKit(newProduct.imageFile);
         if (uploadedUrl) imageUrl = uploadedUrl;
@@ -119,23 +120,26 @@ const Products = () => {
         }
       }
 
+      // 🔧 Ensure only the full CDN URL is saved in MongoDB
       const productData = {
         name: newProduct.name,
         description: newProduct.description,
         price: newProduct.price,
         category: newProduct.category,
         stock: newProduct.stock,
-        image: [{ url: imageUrl, alt: newProduct.name }], // ✅ Correct structure
+        image:  imageUrl, // ✅ Store full ImageKit CDN URL here
       };
 
       const res = await axios.post(`${apiBase}/products`, productData, {
-        headers: { ...authHeaders() },
+        headers: { ...authHeaders(), "Content-Type": "application/json"  },
       });
 
       const created = res.data?.product || res.data;
       setProducts([...products, created]);
       setFilteredProducts([...filteredProducts, created]);
       setShowAddModal(false);
+
+      // Reset form
       setNewProduct({
         name: "",
         description: "",
@@ -153,7 +157,7 @@ const Products = () => {
     }
   };
 
-  // ✅ Delete product
+  // ✅ Delete
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
